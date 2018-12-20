@@ -48,7 +48,7 @@ export class StyleModule {
 class StyleSet {
   constructor(root) {
     root.styleModuleStyleSet = this
-    this.styleTag = document.createElement("style")
+    this.styleTag = (root.ownerDocument || root).createElement("style")
     ;(root.head || root).appendChild(this.styleTag)
   }
 
