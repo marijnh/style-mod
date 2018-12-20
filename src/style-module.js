@@ -16,7 +16,7 @@ export default class StyleModule {
     child.parent = this
     for (let cls in this.classes) {
       let extended = Object.hasOwnProperty.call(child.classes, cls) ? child.classes[cls] : null
-      child.classes[cls] = (extended ? extended + " " : "") + this.classes[cls]
+      child.classes[cls] = this.classes[cls] + (extended ? " " + extended + " " : "")
     }
     return child
   }
@@ -34,7 +34,7 @@ class StyleSet {
     let sheet = this.styleTag.sheet
     if (!sheet) return
     if (module.parent) this.mount(module.parent)
-    for (let i = 0; i < module.rules.length; i++) sheet.insertRule(module.rules[i], sheet.length)
+    for (let i = 0; i < module.rules.length; i++) sheet.insertRule(module.rules[i], sheet.cssRules.length)
     module.mounted.push(this)
   }
 }
@@ -44,7 +44,7 @@ let classID = 1
 function renderClasses(spec) {
   let classes = {}, rules = []
   for (let name in spec) {
-    let className = "-_-" + (classID++).toString(36)
+    let className = "C_" + (classID++).toString(36)
     classes[name] = className
     renderStyle("." + className, spec[name], rules)
   }
@@ -60,10 +60,10 @@ function renderStyle(selector, spec, output) {
       renderStyle(selector, spec[prop], local)
       output.push(prop + " {" + local.join("\n") + "}")
     } else if (/^[a-zA-Z-]/.test(prop)) {
-      renderStyle(selector + prop, spec[prop], output)
+      props.push(prop.replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
     } else {
-      props.push(prop + ": " + spec[prop] + ";")
+      renderStyle(selector + prop, spec[prop], output)
     }
   }
-  if (props.length) output.push(selector + "{" + props.join(" ") + "}")
+  if (props.length) output.push(selector + " {" + props.join("; ") + "}")
 }

@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset=utf8>
+<script>var module = {}</script>
+<script src="../dist/style-module.js"></script>
+
+<p>One</p>
+<p>Two</p>
+
+<script>
+let base = new StyleModule({
+  one: {color: "green"},
+  two: {textDecoration: "underline",
+        ":hover": {textDecoration: "overline"}}
+})
+let styles = base.extend({
+  one: {color: "blue"},
+  two: {fontStyle: "italic"}
+})
+styles.mount(document)
+let ps = document.querySelectorAll("p")
+ps[0].className = styles.classes.one
+ps[1].className = styles.classes.two
+</script>
