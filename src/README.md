@@ -29,7 +29,7 @@ To extend that module, you'd do something like this:
 ```javascript
 const extended = myModule.extend({
   callout: {
-    text-decoration: "underline"
+    textDecoration: "underline"
   }
 })
 
