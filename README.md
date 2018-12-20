@@ -29,7 +29,7 @@ To extend that module, you'd do something like this:
 ```javascript
 const extended = myModule.extend({
   callout: {
-    text-decoration: "underline"
+    textDecoration: "underline"
   }
 })
 
@@ -60,7 +60,7 @@ creating new classes for new instances.
    the input object to CSS class names that can be used in your
    DOM.
 
- * **`mount`**`(root: Union< Document, ShadowRoot >)`\
+ * **`mount`**`(root: Document | ShadowRoot)`\
    Mount this module in a given document or shadow root. Can be
    called multiple times cheaply (the classes will only be added the
    first time it is called for a given root).
@@ -75,7 +75,7 @@ creating new classes for new instances.
 
 Where the `Style` type is defined as:
 
- * **`Style`**`: Object< Union< Style, string > >`\
+ * **`Style`**`: Object< Style | string >`\
    A style is an object that, in the simple case, maps CSS property
    names to strings holding their values, as in `{color: "red",
    fontWeight: "bold"}`. The property names can be given in

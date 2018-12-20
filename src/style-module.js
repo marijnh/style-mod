@@ -20,7 +20,7 @@ export class StyleModule {
     this.parent = null
   }
 
-  // :: (Union<Document, ShadowRoot>)
+  // :: (union<Document, ShadowRoot>)
   // Mount this module in a given document or shadow root. Can be
   // called multiple times cheaply (the classes will only be added the
   // first time it is called for a given root).
@@ -91,7 +91,7 @@ function renderStyle(selector, spec, output) {
   if (props.length) output.push(selector + " {" + props.join("; ") + "}")
 }
 
-// Style::Object<Union<Style,string>>
+// Style::Object<union<Style,string>>
 //
 // A style is an object that, in the simple case, maps CSS property
 // names to strings holding their values, as in `{color: "red",
