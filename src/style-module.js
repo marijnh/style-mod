@@ -84,7 +84,7 @@ class StyleSet {
     for (let i = 0; i < module.rules.length; i++) {
       let rule = module.rules[i].replace(/\.%([\w-]+)%/g, (_, id) => {
         return "." + (Object.prototype.hasOwnProperty.call(classes, id) ? classes[id]
-          : classes[id] = "C_" + (this.classID++).toString(36))
+          : classes[id] = "\u037c" + (this.classID++).toString(36))
       })
       sheet.insertRule(rule, offset++)
     }
