@@ -21,20 +21,21 @@ const myModule = new StyleModule({
   }
 })
 
-document.body.className = myModule.class.main
+document.body.className = myModule.render(document).main
 ```
 
 To extend that module, you'd do something like this:
 
 ```javascript
-const extended = myModule.extend({
+const extension = new StyleModule({
   callout: {
     textDecoration: "underline"
   }
 })
 
 // This will make the element both red and underlined
-document.querySelector("strong").className = extended.class.callout
+document.querySelector("strong").className =
+  myModule.mount(document, [extended]).callout
 ```
 
 This code is open source, released under an MIT license.

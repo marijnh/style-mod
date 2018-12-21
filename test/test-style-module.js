@@ -5,7 +5,7 @@ describe("StyleModule", () => {
   it("renders objects to CSS text", () => {
     let m = new StyleModule({main: {color: "red", border: "1px solid green"}})
     ist(m.rules.length, 1)
-    ist(m.rules[0], "." + m.class.main + " {color: red; border: 1px solid green}")
+    ist(m.rules[0], ".%main% {color: red; border: 1px solid green}")
   })
 
   it("assigns different class to different objects", () => {
@@ -14,7 +14,6 @@ describe("StyleModule", () => {
       two: {color: "blue"}
     })
     ist(m.rules.length, 2)
-    ist(m.class.one, m.class.two, "!=")
     ist(/green/.test(m.rules[0]))
     ist(/blue/.test(m.rules[1]))
   })
@@ -26,8 +25,8 @@ describe("StyleModule", () => {
         ":hover": {fontWeight: "bold"}
       }
     })
-    ist(m.rules[0], "." + m.class.main + ":hover {font-weight: bold}")
-    ist(m.rules[1], "." + m.class.main + " {color: yellow}")
+    ist(m.rules[0], ".%main%:hover {font-weight: bold}")
+    ist(m.rules[1], ".%main% {color: yellow}")
   })
 
   it("supports media queries", () => {
@@ -40,21 +39,7 @@ describe("StyleModule", () => {
       }
     })
     ist(m.rules.length, 1)
-    ist(m.rules[0], "@media screen and (min-width: 400px) {." + m.class.main +
-        " {font-family: \"URW Bookman\"; -moz-box-sizing: border-box}}")
-  })
-
-  it("can extend a module", () => {
-    let m1 = new StyleModule({
-      one: {color: "blue"},
-      two: {textAlign: "center"}
-    })
-    let m2 = m1.extend({
-      two: {border: "none"},
-      three: {pointerEvents: "none"}
-    })
-    ist(m2.class.one, m1.class.one)
-    ist(m2.class.two.indexOf(m1.class.two), -1, ">")
-    ist(m2.class.three)
+    ist(m.rules[0], "@media screen and (min-width: 400px) {.%main% " +
+        "{font-family: \"URW Bookman\"; -moz-box-sizing: border-box}}")
   })
 })

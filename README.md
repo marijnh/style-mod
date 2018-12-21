@@ -21,20 +21,21 @@ const myModule = new StyleModule({
   }
 })
 
-document.body.className = myModule.class.main
+document.body.className = myModule.render(document).main
 ```
 
 To extend that module, you'd do something like this:
 
 ```javascript
-const extended = myModule.extend({
+const extension = new StyleModule({
   callout: {
     textDecoration: "underline"
   }
 })
 
 // This will make the element both red and underlined
-document.querySelector("strong").className = extended.class.callout
+document.querySelector("strong").className =
+  myModule.mount(document, [extended]).callout
 ```
 
 This code is open source, released under an MIT license.
@@ -47,30 +48,26 @@ A style module is an object that defines a number of CSS
 classes.
 
 Style modules should be created once and stored somewhere, as
-opposed to re-creating them every time you need them, because this
-module does not do any kind of deduplication, and will continue
-creating new classes for new instances.
+opposed to re-creating them every time you need them. The amount of
+CSS rules generated for a given DOM root is bounded by the amount
+of style modules that were used. To avoid leaking rules, don't
+create these dynamically, but treat them as one-time allocations.
 
- * `new `**`StyleModule`**`(classes: Object< Style >)`\
+ * `new `**`StyleModule`**`(names: Object< Style >)`\
    Create a style module for the classes specified by the property
-   names in `classes`.
+   names in `names`.
 
- * **`class`**`: Object< string >`\
-   An object mapping the class identifiers from
-   the input object to CSS class names that can be used in your
-   DOM.
+ * **`mount`**`(root: Document | ShadowRoot, extend: ?[StyleModule] = []) → Object< string >`\
+   Mount this module with the given extensions in a given document
+   or shadow root. Returns an object mapping names to (sets of)
+   CSS class names, ensuring that the extensions take priority over
+   this module and previously listed extensions when those classes
+   are applied.
 
- * **`mount`**`(root: Document | ShadowRoot)`\
-   Mount this module in a given document or shadow root. Can be
-   called multiple times cheaply (the classes will only be added the
-   first time it is called for a given root).
-
- * **`extend`**`(classes: Object< Style >) → StyleModule`\
-   Extend this module with additional styles. This will generate
-   classes for the specified styles as usual, but bind the
-   properties of `.classes` in the return value to contain both the
-   CSS class for the old rule and the new rule (when both were
-   defined), so that additional styling may be added.
+   This method can be called multiple times with the same inputs
+   cheaply. New CSS rules will only be generated when necessary, and
+   a cache is used so that usually even the creation of a new object
+   isn't necessary.
 
 
 Where the `Style` type is defined as:

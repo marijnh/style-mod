@@ -2,76 +2,101 @@
 // classes.
 //
 // Style modules should be created once and stored somewhere, as
-// opposed to re-creating them every time you need them, because this
-// module does not do any kind of deduplication, and will continue
-// creating new classes for new instances.
+// opposed to re-creating them every time you need them. The amount of
+// CSS rules generated for a given DOM root is bounded by the amount
+// of style modules that were used. To avoid leaking rules, don't
+// create these dynamically, but treat them as one-time allocations.
 export class StyleModule {
   // :: (Object<Style>)
   // Create a style module for the classes specified by the property
-  // names in `classes`.
-  constructor(classes) {
-    let rendered = renderClasses(classes)
-    this.rules = rendered.rules
-    // :: Object<string> An object mapping the class identifiers from
-    // the input object to CSS class names that can be used in your
-    // DOM.
-    this.class = rendered.classNames
-    this.mounted = []
-    this.parent = null
+  // names in `names`.
+  constructor(names) {
+    this.ids = Object.keys(names)
+    this.rules = renderStyles(names)
+    this.cache = []
+    this.cIndex = 0
   }
 
-  // :: (union<Document, ShadowRoot>)
-  // Mount this module in a given document or shadow root. Can be
-  // called multiple times cheaply (the classes will only be added the
-  // first time it is called for a given root).
-  mount(root) {
-    (root.styleModuleStyleSet || new StyleSet(root)).mount(this)
-  }
-
-  // :: (Object<Style>) → StyleModule
-  // Extend this module with additional styles. This will generate
-  // classes for the specified styles as usual, but bind the
-  // properties of `.classes` in the return value to contain both the
-  // CSS class for the old rule and the new rule (when both were
-  // defined), so that additional styling may be added.
-  extend(classes) {
-    let child = new StyleModule(classes)
-    child.parent = this
-    for (let cls in this.class) {
-      let extended = Object.hasOwnProperty.call(child.class, cls) ? child.class[cls] : null
-      child.class[cls] = this.class[cls] + (extended ? " " + extended + " " : "")
+  // :: (union<Document, ShadowRoot>, [StyleModule]) → Object<string>
+  //
+  // Mount this module with the given extensions in a given document
+  // or shadow root. Returns an object mapping names to (sets of)
+  // CSS class names, ensuring that the extensions take priority over
+  // this module and previously listed extensions when those classes
+  // are applied.
+  //
+  // This method can be called multiple times with the same inputs
+  // cheaply. New CSS rules will only be generated when necessary, and
+  // a cache is used so that usually even the creation of a new object
+  // isn't necessary.
+  mount(root, extend = []) {
+    cache: for (let i = 0; i < this.cache.length; i += 3) {
+      let ext = this.cache[i + 1]
+      if (this.cache[i] != root || ext.length != extend.length) continue
+      for (let j = 0; j < ext.length; j++) if (ext[j] != extend[j]) continue cache
+      return this.cache[i + 2]
     }
-    return child
+    let classes = (root._styleModuleStyleSet || new StyleSet(root)).mount([this].concat(extend))
+    this.cache[this.cIndex] = root
+    this.cache[this.cIndex + 1] = extend
+    this.cache[this.cIndex + 2] = classes
+    this.cIndex = (this.cIndex + 3) % 12
+    return classes
   }
 }
 
 class StyleSet {
   constructor(root) {
-    root.styleModuleStyleSet = this
+    root._styleModuleStyleSet = this
     this.styleTag = (root.ownerDocument || root).createElement("style")
     ;(root.head || root).appendChild(this.styleTag)
+    this.mounted = []
+    this.classID = 1
   }
 
-  mount(module) {
-    if (module.mounted.indexOf(this) > -1) return
-    let sheet = this.styleTag.sheet
-    if (!sheet) return
-    if (module.parent) this.mount(module.parent)
-    for (let i = 0; i < module.rules.length; i++) sheet.insertRule(module.rules[i], sheet.cssRules.length)
-    module.mounted.push(this)
+  mount(modules) {
+    // To ensure the modules' rules are declared in the right order,
+    // this searches the mounted modules from start to end, never
+    // going back before a previously mounted module. This may in rare
+    // cases (two modules being used with inverted order requirements)
+    // lead to a module being mounted more than one time.
+    let pos = 0, classes = {}
+    for (let i = 0; i < modules.length; i++) {
+      let module = modules[i], found = -1
+      for (let j = pos; j < this.mounted.length; j++)
+        if (this.mounted[j].module == module) { found = j; break }
+      if (found < 0) this.mountAt(found = pos, module)
+      pos = found + 1
+      let add = this.mounted[found].classes
+      for (let j = 0; j < modules[0].ids.length; j++) {
+        let id = modules[0].ids[j]
+        if (i == 0) classes[id] = add[id] || ""
+        else if (Object.prototype.hasOwnProperty.call(add, id)) classes[id] += " " + add[id]
+      }
+    }
+    return classes
+  }
+
+  // Mount the given module at the given index.
+  mountAt(pos, module) {
+    let offset = 0, classes = {}, sheet = this.styleTag.sheet
+    for (let i = 0; i < pos; i++) offset += this.mounted[i].module.rules.length
+    for (let i = 0; i < module.rules.length; i++) {
+      let rule = module.rules[i].replace(/\.%([\w-]+)%/g, (_, id) => {
+        return "." + (Object.prototype.hasOwnProperty.call(classes, id) ? classes[id]
+          : classes[id] = "C_" + (this.classID++).toString(36))
+      })
+      sheet.insertRule(rule, offset++)
+    }
+    this.mounted.splice(pos, 1, {module, classes})
   }
 }
 
-let classID = 1
-
-function renderClasses(classes) {
-  let classNames = {}, rules = []
-  for (let name in classes) {
-    let className = "C_" + (classID++).toString(36)
-    classNames[name] = className
-    renderStyle("." + className, classes[name], rules)
-  }
-  return {classNames, rules}
+function renderStyles(names) {
+  let rules = []
+  for (let name in names)
+    renderStyle(".%" + name + "%", names[name], rules)
+  return rules
 }
 
 function renderStyle(selector, spec, output) {
