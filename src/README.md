@@ -21,7 +21,7 @@ const myModule = new StyleModule({
   }
 })
 
-document.body.className = myModule.render(document).main
+document.body.className = myModule.mount(document).main
 ```
 
 To extend that module, you'd do something like this:
