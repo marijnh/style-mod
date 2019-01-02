@@ -7,16 +7,23 @@
 <p>Two</p>
 <p>Three</p>
 <p>Four</p>
+<p>Five</p>
+<div><p>Six</p></div>
 
 <script>
 let base = new StyleModule({
   one: {color: "green"},
   two: {textDecoration: "underline",
-        ":hover": {textDecoration: "overline"}}
+        ":hover": {textDecoration: "overline"}},
+  gate: {export: true}
 })
 let ext = new StyleModule({
   one: {color: "blue"},
   two: {fontStyle: "italic"}
+})
+let gated = new StyleModule({
+  a: {background: "red",
+      "parent(gate)": {parentModule: base, background: "blue"}}
 })
 let first = base.mount(document, [ext])
 let ps = document.querySelectorAll("p")
@@ -25,4 +32,7 @@ ps[1].className = first.two
 let second = ext.mount(document, [base])
 ps[2].className = second.one
 ps[3].className = second.two
+let third = gated.mount(document)
+ps[4].className = ps[5].className = third.a
+ps[5].parentNode.className = first.gate
 </script>

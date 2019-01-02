@@ -87,6 +87,17 @@ Where the `Style` type is defined as:
    property not starting with a dash or a letter or an @-sign is
    assumed to be a sub-selector.
 
+   When a property is has a name like `"parent(foo)"`, it specifies a
+   parent class selector. It should hold another object that specifies
+   styles that apply to this element when it is inside an element with
+   the class name defined by `foo` in another style module. That
+   module must be provided in the `parentModule` property of the value
+   object.
+
+   To prevent an empty style from being omitted from the output
+   (because you want to use it in an `parent(...)` rule), you can give
+   it an `export: true` property.
+
    Finally, a property can specify an @-block to be wrapped around the
    styles defined inside the object that's the property's value. For
    example to create a media query you can do `{"@media screen and

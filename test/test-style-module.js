@@ -42,4 +42,23 @@ describe("StyleModule", () => {
     ist(m.rules[0], "@media screen and (min-width: 400px) {.%main% " +
         "{font-family: \"URW Bookman\"; -moz-box-sizing: border-box}}")
   })
+
+  it("collapses empty styles", () => {
+    let m = new StyleModule({foo: {}})
+    ist(m.rules.length, 0)
+  })
+
+  it("doesn't collapse exported names", () => {
+    let m = new StyleModule({foo: {export: true}})
+    ist(m.rules.length, 1)
+  })
+
+  it("can create nested selectors", () => {
+    let m = new StyleModule({foo: {export: true}})
+    let n = new StyleModule({
+      bar: {"parent(foo)": {parentModule: m, color: "yellow"}}
+    })
+    ist(n.rules.length, 1)
+    ist(n.rules[0], ".%0/foo% .%bar% {color: yellow}")
+  })
 })

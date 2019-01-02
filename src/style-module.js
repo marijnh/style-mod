@@ -12,7 +12,8 @@ export class StyleModule {
   // names in `names`.
   constructor(names) {
     this.ids = Object.keys(names)
-    this.rules = renderStyles(names)
+    this.deps = []
+    this.rules = renderStyles(names, this.deps)
     this.cache = []
     this.cIndex = 0
   }
@@ -62,12 +63,10 @@ class StyleSet {
     // lead to a module being mounted more than one time.
     let pos = 0, classes = {}
     for (let i = 0; i < modules.length; i++) {
-      let module = modules[i], found = -1
-      for (let j = pos; j < this.mounted.length; j++)
-        if (this.mounted[j].module == module) { found = j; break }
-      if (found < 0) this.mountAt(found = pos, module)
-      pos = found + 1
-      let add = this.mounted[found].classes
+      let at = this.find(modules[i], pos)
+      if (at < 0) this.mountAt(at = pos, modules[i])
+      pos = at + 1
+      let add = this.mounted[at].classes
       for (let j = 0; j < modules[0].ids.length; j++) {
         let id = modules[0].ids[j]
         if (i == 0) classes[id] = add[id] || ""
@@ -77,43 +76,64 @@ class StyleSet {
     return classes
   }
 
+  find(module, from) {
+    for (let i = from; i < this.mounted.length; i++)
+      if (this.mounted[i].module == module) return i
+    return -1
+  }
+
   // Mount the given module at the given index.
   mountAt(pos, module) {
     let offset = 0, classes = {}, sheet = this.styleTag.sheet
     for (let i = 0; i < pos; i++) offset += this.mounted[i].module.rules.length
     for (let i = 0; i < module.rules.length; i++) {
-      let rule = module.rules[i].replace(/\.%([\w-]+)%/g, (_, id) => {
+      let rule = module.rules[i].replace(/\.%(?:(\d+)\/)?([\w-]+)%/g, (_, dep, id) => {
+        if (dep) {
+          let depMod = module.deps[+dep], at = this.find(depMod, 0)
+          if (at < 0) this.mountAt(at = pos, depMod)
+          return "." + this.mounted[at].classes[id]
+        }
         return "." + (Object.prototype.hasOwnProperty.call(classes, id) ? classes[id]
           : classes[id] = "\u037c" + (this.classID++).toString(36))
       })
       sheet.insertRule(rule, offset++)
     }
-    this.mounted.splice(pos, 1, {module, classes})
+    this.mounted.splice(pos, 0, {module, classes})
   }
 }
 
-function renderStyles(names) {
+function renderStyles(names, deps) {
   let rules = []
   for (let name in names)
-    renderStyle(".%" + name + "%", names[name], rules)
+    renderStyle(".%" + name + "%", names[name], rules, deps)
   return rules
 }
 
-function renderStyle(selector, spec, output) {
+function renderStyle(selector, spec, output, deps) {
   if (typeof spec != "object") throw new RangeError("Expected style object, got " + JSON.stringify(spec))
-  let props = []
+  let props = [], m, exported
   for (let prop in spec) {
     if (/^@/.test(prop)) {
       let local = []
-      renderStyle(selector, spec[prop], local)
+      renderStyle(selector, spec[prop], local, deps)
       output.push(prop + " {" + local.join("\n") + "}")
+    } else if (m = /^parent\((.*?)\)$/.exec(prop)) {
+      let sub = spec[prop], dep = sub.parentModule
+      if (!dep) throw new RangeError("parent(...) rule without parentModule declaration")
+      let depIndex = deps.indexOf(dep)
+      if (depIndex < 0) deps[depIndex = deps.length] = dep
+      renderStyle(".%" + depIndex + "/" + m[1] + "% " + selector, sub, output, deps)
+    } else if (prop == "export") {
+      exported = true
+    } else if (prop == "parentModule") {
+      // Ignore
     } else if (/^[a-zA-Z-]/.test(prop)) {
       props.push(prop.replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
     } else {
-      renderStyle(selector + prop, spec[prop], output)
+      renderStyle(selector + prop, spec[prop], output, deps)
     }
   }
-  if (props.length) output.push(selector + " {" + props.join("; ") + "}")
+  if (props.length || exported) output.push(selector + " {" + props.join("; ") + "}")
 }
 
 // Style::Object<union<Style,string>>
@@ -131,6 +151,17 @@ function renderStyle(selector, spec, output) {
 // regular properties can freely be mixed in a given object. Any
 // property not starting with a dash or a letter or an @-sign is
 // assumed to be a sub-selector.
+//
+// When a property is has a name like `"parent(foo)"`, it specifies a
+// parent class selector. It should hold another object that specifies
+// styles that apply to this element when it is inside an element with
+// the class name defined by `foo` in another style module. That
+// module must be provided in the `parentModule` property of the value
+// object.
+//
+// To prevent an empty style from being omitted from the output
+// (because you want to use it in an `parent(...)` rule), you can give
+// it an `export: true` property.
 //
 // Finally, a property can specify an @-block to be wrapped around the
 // styles defined inside the object that's the property's value. For
