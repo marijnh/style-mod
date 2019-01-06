@@ -2,8 +2,9 @@
 
 # style-module
 
-Minimal CSS module shim with first-class sets of classes and a
-mechanism for extending such a set.
+Minimal CSS module shim for generating CSS rules and anonymouse class
+names for sets of style declarations and attaching such a set to a
+document or shadow root.
 
 Using it would look something like this:
 
@@ -20,22 +21,7 @@ const myModule = new StyleModule({
     ":hover": {color: "orange"}
   }
 })
-
 document.body.className = myModule.mount(document).main
-```
-
-To extend that module, you'd do something like this:
-
-```javascript
-const extension = new StyleModule({
-  callout: {
-    textDecoration: "underline"
-  }
-})
-
-// This will make the element both red and underlined
-document.querySelector("strong").className =
-  myModule.mount(document, [extended]).callout
 ```
 
 This code is open source, released under an MIT license.

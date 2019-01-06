@@ -2,8 +2,9 @@
 
 # style-module
 
-Minimal CSS module shim with first-class sets of classes and a
-mechanism for extending such a set.
+Minimal CSS module shim for generating CSS rules and anonymouse class
+names for sets of style declarations and attaching such a set to a
+document or shadow root.
 
 Using it would look something like this:
 
@@ -20,22 +21,7 @@ const myModule = new StyleModule({
     ":hover": {color: "orange"}
   }
 })
-
 document.body.className = myModule.mount(document).main
-```
-
-To extend that module, you'd do something like this:
-
-```javascript
-const extension = new StyleModule({
-  callout: {
-    textDecoration: "underline"
-  }
-})
-
-// This will make the element both red and underlined
-document.querySelector("strong").className =
-  myModule.mount(document, [extended]).callout
 ```
 
 This code is open source, released under an MIT license.
@@ -53,21 +39,22 @@ CSS rules generated for a given DOM root is bounded by the amount
 of style modules that were used. To avoid leaking rules, don't
 create these dynamically, but treat them as one-time allocations.
 
- * `new `**`StyleModule`**`(names: Object< Style >)`\
-   Create a style module for the classes specified by the property
-   names in `names`.
+ * `new `**`StyleModule`**`(classes: Object< Style >)`\
+   Create a style module for the classes specified by the properties
+   of `classes`.
 
- * **`mount`**`(root: Document | ShadowRoot, extend: ?[StyleModule] = []) → Object< string >`\
-   Mount this module with the given extensions in a given document
-   or shadow root. Returns an object mapping names to (sets of)
-   CSS class names, ensuring that the extensions take priority over
-   this module and previously listed extensions when those classes
-   are applied.
+ * **`mount`**`(root: Document | ShadowRoot, priority: ?Priority) → Object< string >`\
+   Mount this module in a given document or shadow root. Returns an
+   object mapping names to generated CSS class names.
 
-   This method can be called multiple times with the same inputs
-   cheaply. New CSS rules will only be generated when necessary, and
-   a cache is used so that usually even the creation of a new object
-   isn't necessary.
+   This method can be called multiple times with the same root
+   cheaply.
+
+ * `static `**`lowPriority`**`: Priority`
+
+ * `static `**`normalPriority`**`: Priority`
+
+ * `static `**`highPriority`**`: Priority`
 
 
 Where the `Style` type is defined as:
@@ -79,24 +66,13 @@ Where the `Style` type is defined as:
    camel-case—the library will insert a dash before capital letters
    when converting them to CSS.
 
-   A property in a style object can also be a sub-selector, such as a
-   pseudo-selector or a child selector. For example `{":before":
-   {content: '"hi"'}}` will create a rule whose selector is the
-   current class with `:before` appended after it. Sub-selectors and
-   regular properties can freely be mixed in a given object. Any
-   property not starting with a dash or a letter or an @-sign is
+   A property in a style object can also be a sub-selector, which
+   extends the current context to add a pseudo-selector or a child
+   selector. Such a property should contain a `&` character, which
+   will be replaced by the current selector. For example `{"&:before":
+   {content: '"hi"'}}`. Sub-selectors and regular properties can
+   freely be mixed in a given object. Any property containing a `&` is
    assumed to be a sub-selector.
-
-   When a property is has a name like `"parent(foo)"`, it specifies a
-   parent class selector. It should hold another object that specifies
-   styles that apply to this element when it is inside an element with
-   the class name defined by `foo` in another style module. That
-   module must be provided in the `parentModule` property of the value
-   object.
-
-   To prevent an empty style from being omitted from the output
-   (because you want to use it in an `parent(...)` rule), you can give
-   it an `export: true` property.
 
    Finally, a property can specify an @-block to be wrapped around the
    styles defined inside the object that's the property's value. For

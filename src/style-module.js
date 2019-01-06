@@ -8,132 +8,98 @@
 // create these dynamically, but treat them as one-time allocations.
 export class StyleModule {
   // :: (Object<Style>)
-  // Create a style module for the classes specified by the property
-  // names in `names`.
-  constructor(names) {
-    this.ids = Object.keys(names)
-    this.deps = []
-    this.rules = renderStyles(names, this.deps)
-    this.cache = []
-    this.cIndex = 0
+  // Create a style module for the classes specified by the properties
+  // of `classes`.
+  constructor(classes) {
+    this.classes = classes
+    this.mounted = []
   }
 
-  // :: (union<Document, ShadowRoot>, [StyleModule]) → Object<string>
+  // :: (union<Document, ShadowRoot>, Priority) → Object<string>
   //
-  // Mount this module with the given extensions in a given document
-  // or shadow root. Returns an object mapping names to (sets of)
-  // CSS class names, ensuring that the extensions take priority over
-  // this module and previously listed extensions when those classes
-  // are applied.
+  // Mount this module in a given document or shadow root. Returns an
+  // object mapping names to generated CSS class names.
   //
-  // This method can be called multiple times with the same inputs
-  // cheaply. New CSS rules will only be generated when necessary, and
-  // a cache is used so that usually even the creation of a new object
-  // isn't necessary.
-  mount(root, extend = []) {
-    cache: for (let i = 0; i < this.cache.length; i += 3) {
-      let ext = this.cache[i + 1]
-      if (this.cache[i] != root || ext.length != extend.length) continue
-      for (let j = 0; j < ext.length; j++) if (ext[j] != extend[j]) continue cache
-      return this.cache[i + 2]
-    }
-    let classes = (root._styleModuleStyleSet || new StyleSet(root)).mount([this].concat(extend))
-    this.cache[this.cIndex] = root
-    this.cache[this.cIndex + 1] = extend
-    this.cache[this.cIndex + 2] = classes
-    this.cIndex = (this.cIndex + 3) % 12
-    return classes
+  // This method can be called multiple times with the same root
+  // cheaply.
+  mount(root, priority = StyleModule.normalPriority) {
+    for (let i = 0; i < this.mounted.length; i += 2)
+      if (this.mounted[i] == root) return this.mounted[i + 1]
+    let result = (root[setProp] || new StyleSet(root)).mount(this, priority)
+    this.mounted.push(root, result)
+    return result
   }
 }
+
+// :: Priority
+StyleModule.lowPriority = 0
+// :: Priority
+StyleModule.normalPriority = 1
+// :: Priority
+StyleModule.highPriority = 2
+
+const setProp = typeof Symbol == "undefined" ? "_styleSet" + Math.floor(Math.random() * 1e16) : Symbol("styleSet")
+const countProp = "\u037cN"
 
 class StyleSet {
   constructor(root) {
-    root._styleModuleStyleSet = this
+    this.root = root
+    root[setProp] = this
+    root[countProp] = root[countProp] || 1
     this.styleTag = (root.ownerDocument || root).createElement("style")
-    ;(root.head || root).appendChild(this.styleTag)
-    this.mounted = []
-    this.classID = 1
+    let target = root.head || root
+    target.insertBefore(this.styleTag, target.firstChild)
+    this.insertPos = [0, 0, 0]
+    this.rules = []
   }
 
-  mount(modules) {
-    // To ensure the modules' rules are declared in the right order,
-    // this searches the mounted modules from start to end, never
-    // going back before a previously mounted module. This may in rare
-    // cases (two modules being used with inverted order requirements)
-    // lead to a module being mounted more than one time.
-    let pos = 0, classes = {}
-    for (let i = 0; i < modules.length; i++) {
-      let at = this.find(modules[i], pos)
-      if (at < 0) this.mountAt(at = pos, modules[i])
-      pos = at + 1
-      let add = this.mounted[at].classes
-      for (let j = 0; j < modules[0].ids.length; j++) {
-        let id = modules[0].ids[j]
-        if (i == 0) classes[id] = add[id] || ""
-        else if (Object.prototype.hasOwnProperty.call(add, id)) classes[id] += " " + add[id]
-      }
-    }
+  makeClasses(module) {
+    let classes = {}
+    for (let name in module.classes) classes[name] = "\u037c" + (this.root[countProp]++).toString(36)
     return classes
   }
 
-  find(module, from) {
-    for (let i = from; i < this.mounted.length; i++)
-      if (this.mounted[i].module == module) return i
-    return -1
-  }
-
-  // Mount the given module at the given index.
-  mountAt(pos, module) {
-    let offset = 0, classes = {}, sheet = this.styleTag.sheet
-    for (let i = 0; i < pos; i++) offset += this.mounted[i].module.rules.length
-    for (let i = 0; i < module.rules.length; i++) {
-      let rule = module.rules[i].replace(/\.%(?:(\d+)\/)?([\w-]+)%/g, (_, dep, id) => {
-        if (dep) {
-          let depMod = module.deps[+dep], at = this.find(depMod, 0)
-          if (at < 0) this.mountAt(at = pos, depMod)
-          return "." + this.mounted[at].classes[id]
-        }
-        return "." + (Object.prototype.hasOwnProperty.call(classes, id) ? classes[id]
-          : classes[id] = "\u037c" + (this.classID++).toString(36))
-      })
-      sheet.insertRule(rule, offset++)
+  mount(module, priority) {
+    let classes = this.makeClasses(module)
+    let rules = renderRules(module.classes, classes)
+    let pos = this.insertPos[priority]
+    ;this.rules.splice(pos, 0, ...rules)
+    let sheet = this.styleTag.sheet
+    if (sheet) {
+      for (let i = 0; i < rules.length; i++)
+        sheet.insertRule(rules[i], pos++)
+    } else {
+      this.styleTag.textContent = this.rules.join("\n")
     }
-    this.mounted.splice(pos, 0, {module, classes})
+    for (let i = priority; i < this.insertPos.length; i++)
+      this.insertPos[i] += rules.length
+    return classes
   }
 }
 
-function renderStyles(names, deps) {
+function renderRules(classes, names) {
   let rules = []
-  for (let name in names)
-    renderStyle(".%" + name + "%", names[name], rules, deps)
+  for (let name in classes)
+    renderStyle("." + names[name], classes[name], rules)
   return rules
 }
 
-function renderStyle(selector, spec, output, deps) {
+function renderStyle(selector, spec, output) {
   if (typeof spec != "object") throw new RangeError("Expected style object, got " + JSON.stringify(spec))
-  let props = [], m, exported
+  let props = []
   for (let prop in spec) {
     if (/^@/.test(prop)) {
       let local = []
-      renderStyle(selector, spec[prop], local, deps)
-      output.push(prop + " {" + local.join("\n") + "}")
-    } else if (m = /^parent\((.*?)\)$/.exec(prop)) {
-      let sub = spec[prop], dep = sub.parentModule
-      if (!dep) throw new RangeError("parent(...) rule without parentModule declaration")
-      let depIndex = deps.indexOf(dep)
-      if (depIndex < 0) deps[depIndex = deps.length] = dep
-      renderStyle(".%" + depIndex + "/" + m[1] + "% " + selector, sub, output, deps)
-    } else if (prop == "export") {
-      exported = true
-    } else if (prop == "parentModule") {
-      // Ignore
-    } else if (/^[a-zA-Z-]/.test(prop)) {
-      props.push(prop.replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
+      renderStyle(selector, spec[prop], local)
+      output.push(prop + " {" + local.join(" ") + "}")
+    } else if (/&/.test(prop)) {
+      renderStyle(prop.replace(/&/g, selector), spec[prop], output)
     } else {
-      renderStyle(selector + prop, spec[prop], output, deps)
+      if (typeof spec[prop] == "object") throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
+      props.push(prop.replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
     }
   }
-  if (props.length || exported) output.push(selector + " {" + props.join("; ") + "}")
+  if (props.length) output.push(selector + " {" + props.join("; ") + "}")
 }
 
 // Style::Object<union<Style,string>>
@@ -144,24 +110,13 @@ function renderStyle(selector, spec, output, deps) {
 // camel-case—the library will insert a dash before capital letters
 // when converting them to CSS.
 //
-// A property in a style object can also be a sub-selector, such as a
-// pseudo-selector or a child selector. For example `{":before":
-// {content: '"hi"'}}` will create a rule whose selector is the
-// current class with `:before` appended after it. Sub-selectors and
-// regular properties can freely be mixed in a given object. Any
-// property not starting with a dash or a letter or an @-sign is
+// A property in a style object can also be a sub-selector, which
+// extends the current context to add a pseudo-selector or a child
+// selector. Such a property should contain a `&` character, which
+// will be replaced by the current selector. For example `{"&:before":
+// {content: '"hi"'}}`. Sub-selectors and regular properties can
+// freely be mixed in a given object. Any property containing a `&` is
 // assumed to be a sub-selector.
-//
-// When a property is has a name like `"parent(foo)"`, it specifies a
-// parent class selector. It should hold another object that specifies
-// styles that apply to this element when it is inside an element with
-// the class name defined by `foo` in another style module. That
-// module must be provided in the `parentModule` property of the value
-// object.
-//
-// To prevent an empty style from being omitted from the output
-// (because you want to use it in an `parent(...)` rule), you can give
-// it an `export: true` property.
 //
 // Finally, a property can specify an @-block to be wrapped around the
 // styles defined inside the object that's the property's value. For
