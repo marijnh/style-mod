@@ -104,7 +104,7 @@ function renderStyle(selector, spec, output) {
       renderStyle(prop.replace(/&/g, selector), spec[prop], output)
     } else {
       if (typeof spec[prop] == "object") throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
-      props.push(prop.replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
+      props.push(prop.replace(/\$.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
     }
   }
   if (props.length) output.push(selector + " {" + props.join("; ") + "}")
@@ -117,6 +117,10 @@ function renderStyle(selector, spec, output) {
 // fontWeight: "bold"}`. The property names can be given in
 // camel-case—the library will insert a dash before capital letters
 // when converting them to CSS.
+//
+// If you include a `$` in the name, it and everything after it will
+// be removed from the output, which can be useful when providing a
+// property multiple times, for browser compatibility reasons.
 //
 // A property in a style object can also be a sub-selector, which
 // extends the current context to add a pseudo-selector or a child

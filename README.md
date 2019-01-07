@@ -74,6 +74,10 @@ Where the `Style` type is defined as:
    camel-case—the library will insert a dash before capital letters
    when converting them to CSS.
 
+   If you include a `$` in the name, it and everything after it will
+   be removed from the output, which can be useful when providing a
+   property multiple times, for browser compatibility reasons.
+
    A property in a style object can also be a sub-selector, which
    extends the current context to add a pseudo-selector or a child
    selector. Such a property should contain a `&` character, which

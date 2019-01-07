@@ -51,6 +51,15 @@ describe("StyleModule", () => {
       ".c1 {color: blue}"
     ], eqJSON)
   })
+
+  it("can render multiple instances of a property", () => {
+    ist(rules(new StyleModule({
+      main: {
+        color: "rgba(100, 100, 100, .5)",
+        color$2: "grey"
+      }
+    })), [".c1 {color: rgba(100, 100, 100, .5); color: grey}"], eqJSON)
+  })
 })
 
 function mockDoc() {
