@@ -1,16 +1,16 @@
 {
-  "name": "style-module",
+  "name": "stylemodule",
   "version": "0.0.1",
   "description": "A minimal CSS module shim",
-  "main": "stylemodule.js",
+  "main": "dist/stylemodule.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "npm run build && mocha test/test-*.js",
-    "build": "buble --no modules src/style-module.js | sed -e 's/export var StyleModule/var StyleModule = exports.StyleModule/' > dist/style-module.js; cp src/style-module.d.ts dist/",
+    "build": "buble --no modules src/stylemodule.js | sed -e 's/export var StyleModule/var StyleModule = exports.StyleModule/' > dist/stylemodule.js; cp src/stylemodule.d.ts dist/",
     "prepare": "npm run build",
-    "build-readme": "builddocs --name style-module --main src/README.md --format markdown src/*.js > README.md"
+    "build-readme": "builddocs --name stylemodule --main src/README.md --format markdown src/*.js > README.md"
   },
   "keywords": [
     "css",
