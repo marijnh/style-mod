@@ -47,6 +47,14 @@ create these dynamically, but treat them as one-time allocations.
    Mount this module in a given document or shadow root. Returns an
    object mapping names to generated CSS class names.
 
+   By default, rules are defined in the order in which they are
+   mounted, making those mounted later take precedence in case of an
+   otherwise equal selector precedence. You can pass
+   `StyleModule.lowPriority` or `StyleModule.highPriority` as second
+   argument to explicitly move the rules above or below rules with
+   default priority. Within a priority level, rules remain defined
+   in mount order.
+
    This method can be called multiple times with the same root
    cheaply.
 
