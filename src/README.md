@@ -9,8 +9,8 @@ document or shadow root.
 Using it would look something like this:
 
 ```javascript
-const {StyleModule} = require("style-module")
-const myModule = new StyleModule({
+const {styleModule} = require("style-module")
+const myModule = styleModule({
   main: {
     fontFamily: "Georgia, 'Nimbus Roman No9 L'",
     margin: "0"
@@ -21,7 +21,8 @@ const myModule = new StyleModule({
     ":hover": {color: "orange"}
   }
 })
-document.body.className = myModule.mount(document).main
+styleModule.mount(document, myModule)
+document.body.className = myModule.main
 ```
 
 This code is open source, released under an MIT license.

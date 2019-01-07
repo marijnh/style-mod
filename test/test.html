@@ -6,12 +6,12 @@
 <p>Hello</p>
 
 <script>
-let mod = new StyleModule({
+let mod = styleModule({
   one: {color: "green"},
   two: {textDecoration: "underline",
         "&:hover": {textDecoration: "overline"}}
 })
-let {one, two} = mod.mount(document)
-document.body.className = one
-document.querySelector("p").className = two
+styleModule.mount(document, mod)
+document.body.className = mod.one
+document.querySelector("p").className = mod.two
 </script>

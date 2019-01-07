@@ -1,59 +1,63 @@
-// ::- A style module is an object that defines a number of CSS
-// classes.
+function sym(name, random) {
+  return typeof Symbol == "undefined"
+    ? "__" + name + (random ? Math.floor(Math.random() * 1e8) : "")
+    : random ? Symbol(name) : Symbol.for(name)
+}
+
+const COUNT = sym("\u037c"), SET = sym("styleSet", 1), DATA = sym("data", 1)
+const top = typeof global == "undefined" ? window : global
+
+// :: (Object<Style>, number) → Object<string>
+//
+// Create a style module, which defines a number of CSS classes and
+// generates names for them. The resulting object will map the
+// property names from `spec` to CSS class names that assign the
+// styles in the corresponding property values.
+//
+// A style module can only be used in a given DOM root after it has
+// been _mounted_ there with `styleModule.mount`.
+//
+// By default, rules are defined in the order in which they are
+// mounted, making those mounted later take precedence in case of an
+// otherwise equal selector precedence. You can pass 0 for low
+// priority or 2 for high priority as second argument to explicitly
+// move the rules above or below rules with default priority. Within a
+// priority level, rules remain defined in mount order.
 //
 // Style modules should be created once and stored somewhere, as
 // opposed to re-creating them every time you need them. The amount of
 // CSS rules generated for a given DOM root is bounded by the amount
 // of style modules that were used. To avoid leaking rules, don't
 // create these dynamically, but treat them as one-time allocations.
-export class StyleModule {
-  // :: (Object<Style>)
-  // Create a style module for the classes specified by the properties
-  // of `classes`.
-  constructor(classes) {
-    this.classes = classes
-    this.mounted = []
+export function styleModule(spec, priority = 1) {
+  if (priority < 0 || priority > 2 || +priority != priority) throw new RangeError("Invalid priority: " + priority)
+  let result = {[DATA]: {rules: [], mounted: [], priority}}
+  top[COUNT] = top[COUNT] || 1
+  for (let name in spec) {
+    let className = result[name] = "\u037c" + (top[COUNT]++).toString(36)
+    renderStyle("." + className, spec[name], result[DATA].rules)
   }
-
-  // :: (union<Document, ShadowRoot>, Priority) → Object<string>
-  //
-  // Mount this module in a given document or shadow root. Returns an
-  // object mapping names to generated CSS class names.
-  //
-  // By default, rules are defined in the order in which they are
-  // mounted, making those mounted later take precedence in case of an
-  // otherwise equal selector precedence. You can pass
-  // `StyleModule.lowPriority` or `StyleModule.highPriority` as second
-  // argument to explicitly move the rules above or below rules with
-  // default priority. Within a priority level, rules remain defined
-  // in mount order.
-  //
-  // This method can be called multiple times with the same root
-  // cheaply.
-  mount(root, priority = StyleModule.normalPriority) {
-    for (let i = 0; i < this.mounted.length; i += 2)
-      if (this.mounted[i] == root) return this.mounted[i + 1]
-    let result = (root[setProp] || new StyleSet(root)).mount(this, priority)
-    this.mounted.push(root, result)
-    return result
-  }
+  return result
 }
 
-// :: Priority
-StyleModule.lowPriority = 0
-// :: Priority
-StyleModule.normalPriority = 1
-// :: Priority
-StyleModule.highPriority = 2
-
-const setProp = typeof Symbol == "undefined" ? "_styleSet" + Math.floor(Math.random() * 1e16) : Symbol("styleSet")
-const countProp = "\u037cN"
+// :: (union<Document, ShadowRoot>, Object<string>)
+//
+// Mount the given module in the given DOM root, which ensures that
+// the CSS rules defined by the module are available in that context.
+//
+// This function can be called multiple times with the same arguments
+// cheaply—rules are only added to the document once per root.
+styleModule.mount = function(root, module) {
+  let {rules, mounted, priority} = module[DATA]
+  if (mounted.indexOf(root) > -1) return
+  ;(root[SET] || new StyleSet(root)).mount(rules, priority)
+  mounted.push(root)
+}
 
 class StyleSet {
   constructor(root) {
     this.root = root
-    root[setProp] = this
-    root[countProp] = root[countProp] || 1
+    root[SET] = this
     this.styleTag = (root.ownerDocument || root).createElement("style")
     let target = root.head || root
     target.insertBefore(this.styleTag, target.firstChild)
@@ -61,15 +65,7 @@ class StyleSet {
     this.rules = []
   }
 
-  makeClasses(module) {
-    let classes = {}
-    for (let name in module.classes) classes[name] = "\u037c" + (this.root[countProp]++).toString(36)
-    return classes
-  }
-
-  mount(module, priority) {
-    let classes = this.makeClasses(module)
-    let rules = renderRules(module.classes, classes)
+  mount(rules, priority) {
     let pos = this.insertPos[priority]
     ;this.rules.splice(pos, 0, ...rules)
     let sheet = this.styleTag.sheet
@@ -81,15 +77,7 @@ class StyleSet {
     }
     for (let i = priority; i < this.insertPos.length; i++)
       this.insertPos[i] += rules.length
-    return classes
   }
-}
-
-function renderRules(classes, names) {
-  let rules = []
-  for (let name in classes)
-    renderStyle("." + names[name], classes[name], rules)
-  return rules
 }
 
 function renderStyle(selector, spec, output) {
