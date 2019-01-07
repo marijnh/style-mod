@@ -1,6 +1,6 @@
 <!-- To edit this file, edit /src/README.md, not /README.md -->
 
-# style-module
+# stylemodule
 
 Minimal CSS module shim for generating CSS rules and anonymouse class
 names for sets of style declarations and attaching such a set to a
@@ -9,7 +9,7 @@ document or shadow root.
 Using it would look something like this:
 
 ```javascript
-const {styleModule} = require("style-module")
+const {styleModule} = require("stylemodule")
 const myModule = styleModule({
   main: {
     fontFamily: "Georgia, 'Nimbus Roman No9 L'",
@@ -29,7 +29,7 @@ This code is open source, released under an MIT license.
     
 ## Documentation
 
-@StyleModule
+@styleModule
 
 Where the `Style` type is defined as:
 

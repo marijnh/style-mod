@@ -1,6 +1,6 @@
 <!-- To edit this file, edit /src/README.md, not /README.md -->
 
-# style-module
+# stylemodule
 
 Minimal CSS module shim for generating CSS rules and anonymouse class
 names for sets of style declarations and attaching such a set to a
@@ -9,8 +9,8 @@ document or shadow root.
 Using it would look something like this:
 
 ```javascript
-const {StyleModule} = require("style-module")
-const myModule = new StyleModule({
+const {styleModule} = require("stylemodule")
+const myModule = styleModule({
   main: {
     fontFamily: "Georgia, 'Nimbus Roman No9 L'",
     margin: "0"
@@ -21,48 +21,42 @@ const myModule = new StyleModule({
     ":hover": {color: "orange"}
   }
 })
-document.body.className = myModule.mount(document).main
+styleModule.mount(document, myModule)
+document.body.className = myModule.main
 ```
 
 This code is open source, released under an MIT license.
     
 ## Documentation
 
-### class StyleModule
+ * **`styleModule`**`(spec: Object< Style >, priority: ?number = 1) → Object< string >`\
+   Create a style module, which defines a number of CSS classes and
+   generates names for them. The resulting object will map the
+   property names from `spec` to CSS class names that assign the
+   styles in the corresponding property values.
 
-A style module is an object that defines a number of CSS
-classes.
-
-Style modules should be created once and stored somewhere, as
-opposed to re-creating them every time you need them. The amount of
-CSS rules generated for a given DOM root is bounded by the amount
-of style modules that were used. To avoid leaking rules, don't
-create these dynamically, but treat them as one-time allocations.
-
- * `new `**`StyleModule`**`(classes: Object< Style >)`\
-   Create a style module for the classes specified by the properties
-   of `classes`.
-
- * **`mount`**`(root: Document | ShadowRoot, priority: ?Priority) → Object< string >`\
-   Mount this module in a given document or shadow root. Returns an
-   object mapping names to generated CSS class names.
+   A style module can only be used in a given DOM root after it has
+   been _mounted_ there with `styleModule.mount`.
 
    By default, rules are defined in the order in which they are
    mounted, making those mounted later take precedence in case of an
-   otherwise equal selector precedence. You can pass
-   `StyleModule.lowPriority` or `StyleModule.highPriority` as second
-   argument to explicitly move the rules above or below rules with
-   default priority. Within a priority level, rules remain defined
-   in mount order.
+   otherwise equal selector precedence. You can pass 0 for low
+   priority or 2 for high priority as second argument to explicitly
+   move the rules above or below rules with default priority. Within a
+   priority level, rules remain defined in mount order.
 
-   This method can be called multiple times with the same root
-   cheaply.
+   Style modules should be created once and stored somewhere, as
+   opposed to re-creating them every time you need them. The amount of
+   CSS rules generated for a given DOM root is bounded by the amount
+   of style modules that were used. To avoid leaking rules, don't
+   create these dynamically, but treat them as one-time allocations.
 
- * `static `**`lowPriority`**`: Priority`
+    * **`mount`**`(root: Document | ShadowRoot, module: Object< string >)`\
+      Mount the given module in the given DOM root, which ensures that
+      the CSS rules defined by the module are available in that context.
 
- * `static `**`normalPriority`**`: Priority`
-
- * `static `**`highPriority`**`: Priority`
+      This function can be called multiple times with the same arguments
+      cheaply—rules are only added to the document once per root.
 
 
 Where the `Style` type is defined as:
