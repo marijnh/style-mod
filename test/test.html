@@ -1,38 +1,17 @@
 <!doctype html>
 <meta charset=utf8>
 <script>var exports = {}</script>
-<script src="../dist/style-module.js"></script>
+<script src="../dist/stylemodule.js"></script>
 
-<p>One</p>
-<p>Two</p>
-<p>Three</p>
-<p>Four</p>
-<p>Five</p>
-<div><p>Six</p></div>
+<p>Hello</p>
 
 <script>
-let base = new StyleModule({
+let mod = new StyleModule({
   one: {color: "green"},
   two: {textDecoration: "underline",
-        ":hover": {textDecoration: "overline"}},
-  gate: {export: true}
+        "&:hover": {textDecoration: "overline"}}
 })
-let ext = new StyleModule({
-  one: {color: "blue"},
-  two: {fontStyle: "italic"}
-})
-let gated = new StyleModule({
-  a: {background: "red",
-      "parent(gate)": {parentModule: base, background: "blue"}}
-})
-let first = base.mount(document, [ext])
-let ps = document.querySelectorAll("p")
-ps[0].className = first.one
-ps[1].className = first.two
-let second = ext.mount(document, [base])
-ps[2].className = second.one
-ps[3].className = second.two
-let third = gated.mount(document)
-ps[4].className = ps[5].className = third.a
-ps[5].parentNode.className = first.gate
+let {one, two} = mod.mount(document)
+document.body.className = one
+document.querySelector("p").className = two
 </script>
