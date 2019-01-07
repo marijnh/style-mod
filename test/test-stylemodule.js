@@ -56,7 +56,7 @@ describe("StyleModule", () => {
     ist(rules(new StyleModule({
       main: {
         color: "rgba(100, 100, 100, .5)",
-        color$2: "grey"
+        color_2: "grey"
       }
     })), [".c1 {color: rgba(100, 100, 100, .5); color: grey}"], eqJSON)
   })
