@@ -29,7 +29,7 @@ This code is open source, released under an MIT license.
     
 ## Documentation
 
- * **`styleModule`**`(spec: Object< Style >, priority: ?number = 1) → Object< string >`\
+ * **`styleModule`**`(spec: Object< Style >, options: number, ?{priority: ?number}) → Object< string >`\
    Create a style module, which defines a number of CSS classes and
    generates names for them. The resulting object will map the
    property names from `spec` to CSS class names that assign the

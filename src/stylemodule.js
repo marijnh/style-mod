@@ -7,7 +7,7 @@ function sym(name, random) {
 const COUNT = sym("\u037c"), SET = sym("styleSet", 1), DATA = sym("data", 1)
 const top = typeof global == "undefined" ? window : global
 
-// :: (Object<Style>, number) → Object<string>
+// :: (Object<Style>, number, ?{priority: ?number}) → Object<string>
 //
 // Create a style module, which defines a number of CSS classes and
 // generates names for them. The resulting object will map the
@@ -29,7 +29,9 @@ const top = typeof global == "undefined" ? window : global
 // CSS rules generated for a given DOM root is bounded by the amount
 // of style modules that were used. To avoid leaking rules, don't
 // create these dynamically, but treat them as one-time allocations.
-export function styleModule(spec, priority = 1) {
+export function styleModule(spec, options) {
+  let priority = options && options.priority
+  if (priority == null) priority = 1
   if (priority < 0 || priority > 2 || +priority != priority) throw new RangeError("Invalid priority: " + priority)
   let result = {[DATA]: {rules: [], mounted: [], priority}}
   top[COUNT] = top[COUNT] || 1
@@ -48,10 +50,10 @@ export function styleModule(spec, priority = 1) {
 // This function can be called multiple times with the same arguments
 // cheaply—rules are only added to the document once per root.
 styleModule.mount = function(root, module) {
-  let {rules, mounted, priority} = module[DATA]
-  if (mounted.indexOf(root) > -1) return
-  ;(root[SET] || new StyleSet(root)).mount(rules, priority)
-  mounted.push(root)
+  let data = module[DATA]
+  if (data.mounted.indexOf(root) > -1) return
+  ;(root[SET] || new StyleSet(root)).mount(data.rules, data.priority)
+  data.mounted.push(root)
 }
 
 class StyleSet {

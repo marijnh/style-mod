@@ -1,4 +1,4 @@
-export function styleModule<S extends {[name: string]: Style}>(spec: S, priority?: 0 | 1 | 2): StyleModule<S>
+export function styleModule<S extends {[name: string]: Style}>(spec: S, options?: {priority?: 0 | 1 | 2}): StyleModule<S>
 
 export declare namespace styleModule {
   export function mount(root: Document | ShadowRoot | DocumentOrShadowRoot, module: StyleModule);
