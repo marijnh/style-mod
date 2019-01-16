@@ -8,8 +8,8 @@
   },
   "scripts": {
     "test": "npm run build && mocha test/test-*.js",
-    "build": "buble --no modules src/stylemodule.js | sed -e 's/export function styleModule/var styleModule = exports.styleModule = function/' > dist/stylemodule.js; cp src/stylemodule.d.ts dist/",
-    "prepare": "npm run build",
+    "build": "buble --no modules src/stylemodule.js | sed -e 's/export var StyleModule/var StyleModule = exports.StyleModule/' > dist/stylemodule.js; cp src/stylemodule.d.ts dist/",
+    "prepare": "npm run build && npm run build-readme",
     "build-readme": "builddocs --name stylemodule --main src/README.md --format markdown src/*.js > README.md"
   },
   "keywords": [

@@ -29,34 +29,37 @@ This code is open source, released under an MIT license.
     
 ## Documentation
 
- * **`styleModule`**`(spec: Object< Style >, options: number, ?{priority: ?number}) → Object< string >`\
-   Create a style module, which defines a number of CSS classes and
-   generates names for them. The resulting object will map the
-   property names from `spec` to CSS class names that assign the
-   styles in the corresponding property values.
+### class StyleModule
 
-   A style module can only be used in a given DOM root after it has
-   been _mounted_ there with `styleModule.mount`.
+A style module defines a number of CSS classes and generates
+names for them. Instances of this class bind the property names
+from `spec` to CSS class names that assign the styles in the
+corresponding property values.
 
-   By default, rules are defined in the order in which they are
-   mounted, making those mounted later take precedence in case of an
-   otherwise equal selector precedence. You can pass 0 for low
-   priority or 2 for high priority as second argument to explicitly
-   move the rules above or below rules with default priority. Within a
-   priority level, rules remain defined in mount order.
+A style module can only be used in a given DOM root after it has
+been _mounted_ there with `StyleModule.mount`.
 
-   Style modules should be created once and stored somewhere, as
-   opposed to re-creating them every time you need them. The amount of
-   CSS rules generated for a given DOM root is bounded by the amount
-   of style modules that were used. To avoid leaking rules, don't
-   create these dynamically, but treat them as one-time allocations.
+By default, rules are defined in the order in which they are
+mounted, making those mounted later take precedence in case of an
+otherwise equal selector precedence. You can pass 0 for low
+priority or 2 for high priority as second argument to explicitly
+move the rules above or below rules with default priority. Within a
+priority level, rules remain defined in mount order.
 
-    * **`mount`**`(root: Document | ShadowRoot, module: Object< string >)`\
-      Mount the given module in the given DOM root, which ensures that
-      the CSS rules defined by the module are available in that context.
+Style modules should be created once and stored somewhere, as
+opposed to re-creating them every time you need them. The amount of
+CSS rules generated for a given DOM root is bounded by the amount
+of style modules that were used. To avoid leaking rules, don't
+create these dynamically, but treat them as one-time allocations.
 
-      This function can be called multiple times with the same arguments
-      cheaply—rules are only added to the document once per root.
+ * `new `**`StyleModule`**`(spec: Object< Style >, options: number, ?{priority: ?number}) → Object< string >`
+
+ * `static `**`mount`**`(root: Document | ShadowRoot, module: Object< string >)`\
+   Mount the given module in the given DOM root, which ensures that
+   the CSS rules defined by the module are available in that context.
+
+   This function can be called multiple times with the same arguments
+   cheaply—rules are only added to the document once per root.
 
 
 Where the `Style` type is defined as:

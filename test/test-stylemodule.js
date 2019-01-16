@@ -1,14 +1,14 @@
-const {styleModule} = require("../dist/stylemodule")
+const {StyleModule} = require("../dist/stylemodule")
 const ist = require("ist")
 
 describe("StyleModule", () => {
   it("renders objects to CSS text", () => {
-    ist(rules(styleModule({main: {color: "red", border: "1px solid green"}})),
+    ist(rules(new StyleModule({main: {color: "red", border: "1px solid green"}})),
         [".c1 {color: red; border: 1px solid green}"], eqRules)
   })
 
   it("assigns different class to different objects", () => {
-    ist(rules(styleModule({
+    ist(rules(new StyleModule({
       one: {color: "green"},
       two: {color: "blue"}
     })), [
@@ -18,7 +18,7 @@ describe("StyleModule", () => {
   })
 
   it("supports pseudo-selectors", () => {
-    ist(rules(styleModule({
+    ist(rules(new StyleModule({
       main: {
         color: "yellow",
         "&:hover": {fontWeight: "bold"}
@@ -30,7 +30,7 @@ describe("StyleModule", () => {
   })
 
   it("supports media queries", () => {
-    ist(rules(styleModule({
+    ist(rules(new StyleModule({
       main: {
         "@media screen and (min-width: 400px)": {
           fontFamily: '"URW Bookman"',
@@ -41,7 +41,7 @@ describe("StyleModule", () => {
   })
 
   it("can render multiple instances of a property", () => {
-    ist(rules(styleModule({
+    ist(rules(new StyleModule({
       main: {
         color: "rgba(100, 100, 100, .5)",
         color_2: "grey"

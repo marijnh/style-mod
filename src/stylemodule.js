@@ -7,15 +7,13 @@ function sym(name, random) {
 const COUNT = sym("\u037c"), SET = sym("styleSet", 1), DATA = sym("data", 1)
 const top = typeof global == "undefined" ? window : global
 
-// :: (Object<Style>, number, ?{priority: ?number}) → Object<string>
-//
-// Create a style module, which defines a number of CSS classes and
-// generates names for them. The resulting object will map the
-// property names from `spec` to CSS class names that assign the
-// styles in the corresponding property values.
+// ::- A style module defines a number of CSS classes and generates
+// names for them. Instances of this class bind the property names
+// from `spec` to CSS class names that assign the styles in the
+// corresponding property values.
 //
 // A style module can only be used in a given DOM root after it has
-// been _mounted_ there with `styleModule.mount`.
+// been _mounted_ there with `StyleModule.mount`.
 //
 // By default, rules are defined in the order in which they are
 // mounted, making those mounted later take precedence in case of an
@@ -29,32 +27,36 @@ const top = typeof global == "undefined" ? window : global
 // CSS rules generated for a given DOM root is bounded by the amount
 // of style modules that were used. To avoid leaking rules, don't
 // create these dynamically, but treat them as one-time allocations.
-export function styleModule(spec, options) {
-  let priority = options && options.priority
-  if (priority == null) priority = 1
-  if (priority < 0 || priority > 2 || +priority != priority) throw new RangeError("Invalid priority: " + priority)
-  let result = {[DATA]: {rules: [], mounted: [], priority}}
-  top[COUNT] = top[COUNT] || 1
-  for (let name in spec) {
-    let className = result[name] = "\u037c" + (top[COUNT]++).toString(36)
-    renderStyle("." + className, spec[name], result[DATA].rules)
+export class StyleModule {
+  // :: (Object<Style>, number, ?{priority: ?number}) → Object<string>
+  constructor(spec, options) {
+    let priority = options && options.priority
+    if (priority == null) priority = 1
+    if (priority < 0 || priority > 2 || +priority != priority) throw new RangeError("Invalid priority: " + priority)
+    this[DATA] = {rules: [], mounted: [], priority}
+    top[COUNT] = top[COUNT] || 1
+    for (let name in spec) {
+      let className = this[name] = "\u037c" + (top[COUNT]++).toString(36)
+      renderStyle("." + className, spec[name], this[DATA].rules)
+    }
   }
-  return result
+
+  // :: (union<Document, ShadowRoot>, Object<string>)
+  //
+  // Mount the given module in the given DOM root, which ensures that
+  // the CSS rules defined by the module are available in that context.
+  //
+  // This function can be called multiple times with the same arguments
+  // cheaply—rules are only added to the document once per root.
+  static mount(root, module) {
+    let data = module[DATA]
+    if (data.mounted.indexOf(root) > -1) return
+    ;(root[SET] || new StyleSet(root)).mount(data.rules, data.priority)
+    data.mounted.push(root)
+  }
 }
 
-// :: (union<Document, ShadowRoot>, Object<string>)
-//
-// Mount the given module in the given DOM root, which ensures that
-// the CSS rules defined by the module are available in that context.
-//
-// This function can be called multiple times with the same arguments
-// cheaply—rules are only added to the document once per root.
-styleModule.mount = function(root, module) {
-  let data = module[DATA]
-  if (data.mounted.indexOf(root) > -1) return
-  ;(root[SET] || new StyleSet(root)).mount(data.rules, data.priority)
-  data.mounted.push(root)
-}
+StyleModule.prototype = Object.create(null)
 
 class StyleSet {
   constructor(root) {

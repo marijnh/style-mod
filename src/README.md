@@ -29,7 +29,7 @@ This code is open source, released under an MIT license.
     
 ## Documentation
 
-@styleModule
+@StyleModule
 
 Where the `Style` type is defined as:
 
