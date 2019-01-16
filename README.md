@@ -1,6 +1,6 @@
 <!-- To edit this file, edit /src/README.md, not /README.md -->
 
-# stylemodule
+# style-mod
 
 Minimal CSS module shim for generating CSS rules and anonymouse class
 names for sets of style declarations and attaching such a set to a
@@ -9,8 +9,8 @@ document or shadow root.
 Using it would look something like this:
 
 ```javascript
-const {styleModule} = require("stylemodule")
-const myModule = styleModule({
+const {StyleModule} = require("style-mod")
+const myModule = new StyleModule({
   main: {
     fontFamily: "Georgia, 'Nimbus Roman No9 L'",
     margin: "0"
@@ -21,7 +21,7 @@ const myModule = styleModule({
     ":hover": {color: "orange"}
   }
 })
-styleModule.mount(document, myModule)
+StyleModule.mount(document, myModule)
 document.body.className = myModule.main
 ```
 
