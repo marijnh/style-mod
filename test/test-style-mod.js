@@ -1,4 +1,4 @@
-const {StyleModule} = require("../dist/stylemodule")
+const {StyleModule} = require("..")
 const ist = require("ist")
 
 describe("StyleModule", () => {
