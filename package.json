@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "npm run build && mocha test/test-*.js",
-    "build": "buble --no modules src/style-mod.js | sed -e 's/export var StyleModule/var StyleModule = exports.StyleModule/' > dist/style-mod.js; cp src/style-mod.d.ts dist/",
+    "build": "buble --no modules src/style-mod.js | sed -e 's/export function StyleModule/var StyleModule = exports.StyleModule = function/' > dist/style-mod.js; cp src/style-mod.d.ts dist/",
     "prepare": "npm run build && npm run build-readme",
     "build-readme": "builddocs --name style-mod --main src/README.md --format markdown src/*.js > README.md"
   },

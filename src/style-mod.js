@@ -7,7 +7,7 @@ function sym(name, random) {
 const COUNT = sym("\u037c"), SET = sym("styleSet", 1), DATA = sym("data", 1)
 const top = typeof global == "undefined" ? window : global
 
-// ::- A style module defines a number of CSS classes and generates
+// :: (Object<Style>, number, ?{priority: ?number}) → Object<string>
 // names for them. Instances of this class bind the property names
 // from `spec` to CSS class names that assign the styles in the
 // corresponding property values.
@@ -27,33 +27,30 @@ const top = typeof global == "undefined" ? window : global
 // CSS rules generated for a given DOM root is bounded by the amount
 // of style modules that were used. To avoid leaking rules, don't
 // create these dynamically, but treat them as one-time allocations.
-export class StyleModule {
-  // :: (Object<Style>, number, ?{priority: ?number}) → Object<string>
-  constructor(spec, options) {
-    let priority = options && options.priority
-    if (priority == null) priority = 1
-    if (priority < 0 || priority > 2 || +priority != priority) throw new RangeError("Invalid priority: " + priority)
-    this[DATA] = {rules: [], mounted: [], priority}
-    top[COUNT] = top[COUNT] || 1
-    for (let name in spec) {
-      let className = this[name] = "\u037c" + (top[COUNT]++).toString(36)
-      renderStyle("." + className, spec[name], this[DATA].rules)
-    }
+export function StyleModule(spec, options) {
+  let priority = options && options.priority
+  if (priority == null) priority = 1
+  if (priority < 0 || priority > 2 || +priority != priority) throw new RangeError("Invalid priority: " + priority)
+  this[DATA] = {rules: [], mounted: [], priority}
+  top[COUNT] = top[COUNT] || 1
+  for (let name in spec) {
+    let className = this[name] = "\u037c" + (top[COUNT]++).toString(36)
+    renderStyle("." + className, spec[name], this[DATA].rules)
   }
+}
 
-  // :: (union<Document, ShadowRoot>, Object<string>)
-  //
-  // Mount the given module in the given DOM root, which ensures that
-  // the CSS rules defined by the module are available in that context.
-  //
-  // This function can be called multiple times with the same arguments
-  // cheaply—rules are only added to the document once per root.
-  static mount(root, module) {
-    let data = module[DATA]
-    if (data.mounted.indexOf(root) > -1) return
-    ;(root[SET] || new StyleSet(root)).mount(data.rules, data.priority)
-    data.mounted.push(root)
-  }
+// :: (union<Document, ShadowRoot>, Object<string>)
+//
+// Mount the given module in the given DOM root, which ensures that
+// the CSS rules defined by the module are available in that context.
+//
+// This function can be called multiple times with the same arguments
+// cheaply—rules are only added to the document once per root.
+StyleModule.mount = function(root, module) {
+  let data = module[DATA]
+  if (data.mounted.indexOf(root) > -1) return
+  ;(root[SET] || new StyleSet(root)).mount(data.rules, data.priority)
+  data.mounted.push(root)
 }
 
 StyleModule.prototype = Object.create(null)
