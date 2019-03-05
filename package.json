@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "description": "A minimal CSS module shim",
   "main": "dist/style-mod.js",
+  "module": "src/style-mod.js",
   "directories": {
     "test": "test"
   },
