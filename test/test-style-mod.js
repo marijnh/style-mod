@@ -51,8 +51,8 @@ describe("StyleModule", () => {
 })
 
 function rules(module) {
-  for (let p in module) if (typeof module[p] != "string") return module[p].rules
-  for (let p of Object.getOwnPropertySymbols(module)) return module[p].rules
+  for (let p in module) if (Array.isArray(module[p])) return module[p]
+  for (let p of Object.getOwnPropertySymbols(module)) if (Array.isArray(module[p])) return module[p]
 }
 
 function norm(rules) {

@@ -31,7 +31,7 @@ This code is open source, released under an MIT license.
 
 ### class StyleModule
 
- * `new `**`StyleModule`**`(spec: Object< Style >, options: number, ?{priority: ?number}) → Object< string >`\
+ * `new `**`StyleModule`**`(spec: Object< Style >, number) → StyleModule`\
    Instances of this class bind the property names
    from `spec` to CSS class names that assign the styles in the
    corresponding property values.
@@ -39,26 +39,24 @@ This code is open source, released under an MIT license.
    A style module can only be used in a given DOM root after it has
    been _mounted_ there with `StyleModule.mount`.
 
-   By default, rules are defined in the order in which they are
-   mounted, making those mounted later take precedence in case of an
-   otherwise equal selector precedence. You can pass a number (may be
-   fractional) between 0 for low priority or 2 for high priority as
-   second argument to explicitly move the rules above or below rules
-   with default priority. Within a priority level, rules remain
-   defined in mount order.
-
    Style modules should be created once and stored somewhere, as
    opposed to re-creating them every time you need them. The amount of
    CSS rules generated for a given DOM root is bounded by the amount
    of style modules that were used. To avoid leaking rules, don't
    create these dynamically, but treat them as one-time allocations.
 
- * `static `**`mount`**`(root: Document | ShadowRoot, module: Object< string >)`\
-   Mount the given module in the given DOM root, which ensures that
-   the CSS rules defined by the module are available in that context.
+ * `static `**`mount`**`(root: Document | ShadowRoot, modules: [StyleModule] | StyleModule)`\
+   Mount the given set of modules in the given DOM root, which ensures
+   that the CSS rules defined by the module are available in that
+   context.
 
-   This function can be called multiple times with the same arguments
-   cheaply—rules are only added to the document once per root.
+   Rules are only added to the document once per root.
+
+   Rule order will follow the order of the modules, so that rules from
+   modules later in the array take precedence of those from earlier
+   modules. If you call this function multiple times for the same root
+   in a way that changes the order of already mounted modules, the old
+   order will be changed.
 
 
 Where the `Style` type is defined as:
