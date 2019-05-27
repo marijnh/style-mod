@@ -17,10 +17,11 @@ const top = typeof global == "undefined" ? window : global
 //
 // By default, rules are defined in the order in which they are
 // mounted, making those mounted later take precedence in case of an
-// otherwise equal selector precedence. You can pass 0 for low
-// priority or 2 for high priority as second argument to explicitly
-// move the rules above or below rules with default priority. Within a
-// priority level, rules remain defined in mount order.
+// otherwise equal selector precedence. You can pass a number (may be
+// fractional) between 0 for low priority or 2 for high priority as
+// second argument to explicitly move the rules above or below rules
+// with default priority. Within a priority level, rules remain
+// defined in mount order.
 //
 // Style modules should be created once and stored somewhere, as
 // opposed to re-creating them every time you need them. The amount of
@@ -62,13 +63,18 @@ class StyleSet {
     this.styleTag = (root.ownerDocument || root).createElement("style")
     let target = root.head || root
     target.insertBefore(this.styleTag, target.firstChild)
-    this.insertPos = [0, 0, 0]
+    this.priorities = []
     this.rules = []
   }
 
   mount(rules, priority) {
-    let pos = this.insertPos[priority]
-    ;this.rules.splice(pos, 0, ...rules)
+    let pos = 0
+    while (pos < this.priorities.length && this.priorities[pos] <= priority) pos++
+    this.rules.splice(pos, 0, ...rules)
+    let prioArray = []
+    for (let i = 0; i < rules.length; i++) prioArray[i] = priority
+    this.priorities.splice(pos, 0, ...prioArray)
+
     let sheet = this.styleTag.sheet
     if (sheet) {
       for (let i = 0; i < rules.length; i++)
@@ -76,8 +82,6 @@ class StyleSet {
     } else {
       this.styleTag.textContent = this.rules.join("\n")
     }
-    for (let i = priority; i < this.insertPos.length; i++)
-      this.insertPos[i] += rules.length
   }
 }
 

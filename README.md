@@ -41,10 +41,11 @@ This code is open source, released under an MIT license.
 
    By default, rules are defined in the order in which they are
    mounted, making those mounted later take precedence in case of an
-   otherwise equal selector precedence. You can pass 0 for low
-   priority or 2 for high priority as second argument to explicitly
-   move the rules above or below rules with default priority. Within a
-   priority level, rules remain defined in mount order.
+   otherwise equal selector precedence. You can pass a number (may be
+   fractional) between 0 for low priority or 2 for high priority as
+   second argument to explicitly move the rules above or below rules
+   with default priority. Within a priority level, rules remain
+   defined in mount order.
 
    Style modules should be created once and stored somewhere, as
    opposed to re-creating them every time you need them. The amount of
