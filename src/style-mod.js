@@ -8,7 +8,7 @@ const COUNT = sym("\u037c"), SET = sym("styleSet", 1), DATA = sym("data", 1)
 const top = typeof global == "undefined" ? window : global
 
 // :: (Object<Style>, number, ?{priority: ?number}) → Object<string>
-// names for them. Instances of this class bind the property names
+// Instances of this class bind the property names
 // from `spec` to CSS class names that assign the styles in the
 // corresponding property values.
 //

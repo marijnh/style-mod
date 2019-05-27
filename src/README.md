@@ -2,7 +2,7 @@
 
 # style-mod
 
-Minimal CSS module shim for generating CSS rules and anonymouse class
+Minimal CSS module shim for generating CSS rules and anonymous class
 names for sets of style declarations and attaching such a set to a
 document or shadow root.
 
@@ -18,7 +18,7 @@ const myModule = new StyleModule({
   callout: {
     color: "red",
     fontWeight: "bold",
-    ":hover": {color: "orange"}
+    "&:hover": {color: "orange"}
   }
 })
 StyleModule.mount(document, myModule)
