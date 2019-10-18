@@ -67,7 +67,6 @@ class StyleSet {
         this.modules.splice(index, 1)
         j--
         index = -1
-        reordered = true
       }
       if (index == -1) {
         this.modules.splice(j++, 0, mod)
