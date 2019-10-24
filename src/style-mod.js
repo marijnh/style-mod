@@ -18,14 +18,22 @@ const top = typeof global == "undefined" ? window : global
 // Style modules should be created once and stored somewhere, as
 // opposed to re-creating them every time you need them. The amount of
 // CSS rules generated for a given DOM root is bounded by the amount
-// of style modules that were used. To avoid leaking rules, don't
+// of style modules that were used. So to avoid leaking rules, don't
 // create these dynamically, but treat them as one-time allocations.
 export function StyleModule(spec) {
   this[RULES] = []
   top[COUNT] = top[COUNT] || 1
   for (let name in spec) {
-    let className = this[name] = "\u037c" + (top[COUNT]++).toString(36)
-    renderStyle("." + className, spec[name], this[RULES])
+    let style = spec[name], specificity = style.specificity || 0
+    let id = "\u037c" + (top[COUNT]++).toString(36)
+    let selector = "." + id, className = id
+    for (let i = 0; i < specificity; i++) {
+      let name = "\u037c_" + (i ? i.toString(36) : "")
+      selector += "." + name
+      className += " " + name
+    }
+    this[name] = className
+    renderStyle(selector, spec[name], this[RULES])
   }
 }
 
@@ -98,7 +106,7 @@ function renderStyle(selector, spec, output) {
       output.push(prop + " {" + local.join(" ") + "}")
     } else if (/&/.test(prop)) {
       renderStyle(prop.replace(/&/g, selector), spec[prop], output)
-    } else {
+    } else if (prop != "specificity") {
       if (typeof spec[prop] == "object") throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
       props.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
     }

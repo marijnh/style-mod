@@ -48,6 +48,22 @@ describe("StyleModule", () => {
       }
     })), [".c1 {color: rgba(100, 100, 100, .5); color: grey}"], eqRules)
   })
+
+  it("can add specificity", () => {
+    let mod = new StyleModule({
+      main: {
+        specificity: 1,
+        color: "yellow"
+      },
+      other: {
+        specificity: 2,
+        color: "blue"
+      }
+    })
+    ist(rules(mod), [".c1.c_ {color: yellow}", ".c2.c_.c_1 {color: blue}"], eqRules)
+    ist(mod.main.split(" ").length, 2)
+    ist(mod.other.split(" ").length, 3)
+  })
 })
 
 function rules(module) {
@@ -56,7 +72,7 @@ function rules(module) {
 }
 
 function norm(rules) {
-  let names = [], re = /\.[c\u037c](\d+)/g, m
+  let names = [], re = /\.[c\u037c](\w+)/g, m
   for (let rule of rules) while (m = re.exec(rule)) if (names.indexOf(m[1]) < 0) names.push(m[1])
   return rules.map(rule => rule.replace(re, (_, id) => ".c" + (names.indexOf(id) + 1)))
 }

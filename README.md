@@ -42,7 +42,7 @@ This code is open source, released under an MIT license.
    Style modules should be created once and stored somewhere, as
    opposed to re-creating them every time you need them. The amount of
    CSS rules generated for a given DOM root is bounded by the amount
-   of style modules that were used. To avoid leaking rules, don't
+   of style modules that were used. So to avoid leaking rules, don't
    create these dynamically, but treat them as one-time allocations.
 
  * `static `**`mount`**`(root: Document | ShadowRoot, modules: [StyleModule] | StyleModule)`\
@@ -73,6 +73,13 @@ Where the `Style` type is defined as:
    providing a property multiple times, for browser compatibility
    reasons.
 
+   A property called `specificity` has a special meaning: if it holds
+   a number _N_, greater than 0, the selector for the class will have
+   _N_ extra dummy classes added, and those dummy classes will also be
+   present in the class name string created for the style. This allows
+   you to create rules that take precedence over other rules, even
+   when they are defined earlier.
+
    A property in a style object can also be a sub-selector, which
    extends the current context to add a pseudo-selector or a child
    selector. Such a property should contain a `&` character, which
@@ -85,5 +92,3 @@ Where the `Style` type is defined as:
    styles defined inside the object that's the property's value. For
    example to create a media query you can do `{"@media screen and
    (min-width: 400px)": {...}}`.
-
-
