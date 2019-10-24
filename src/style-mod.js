@@ -127,6 +127,13 @@ function renderStyle(selector, spec, output) {
 // providing a property multiple times, for browser compatibility
 // reasons.
 //
+// A property called `specificity` has a special meaning: if it holds
+// a number _N_, greater than 0, the selector for the class will have
+// _N_ extra dummy classes added, and those dummy classes will also be
+// present in the class name string created for the style. This allows
+// you to create rules that take precedence over other rules, even
+// when they are defined earlier.
+//
 // A property in a style object can also be a sub-selector, which
 // extends the current context to add a pseudo-selector or a child
 // selector. Such a property should contain a `&` character, which
