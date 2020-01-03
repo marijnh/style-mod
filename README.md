@@ -46,6 +46,9 @@ This code is open source, released under an MIT license.
    of style modules that were used. So to avoid leaking rules, don't
    create these dynamically, but treat them as one-time allocations.
 
+ * `static `**`newName`**`() → string`\
+   Generate a new unique CSS class name.
+
  * `static `**`mount`**`(root: Document | ShadowRoot, modules: [StyleModule] | StyleModule)`\
    Mount the given set of modules in the given DOM root, which ensures
    that the CSS rules defined by the module are available in that

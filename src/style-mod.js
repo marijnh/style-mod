@@ -26,7 +26,7 @@ export function StyleModule(spec, options) {
   top[COUNT] = top[COUNT] || 1
   for (let name in spec) {
     let style = spec[name], specificity = style.specificity || 0
-    let id = "\u037c" + (top[COUNT]++).toString(36), selector = name
+    let id = StyleModule.newName(), selector = name
     if ((options && options.generateClasses) !== false) {
       let className = id
       selector = "." + id
@@ -40,6 +40,10 @@ export function StyleModule(spec, options) {
     renderStyle(selector, spec[name], this[RULES])
   }
 }
+
+// :: () → string
+// Generate a new unique CSS class name.
+StyleModule.newName = () => "\u037c" + (top[COUNT]++).toString(36)
 
 StyleModule.prototype = Object.create(null)
 
