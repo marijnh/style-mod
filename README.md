@@ -31,10 +31,11 @@ This code is open source, released under an MIT license.
 
 ### class StyleModule
 
- * `new `**`StyleModule`**`(spec: Object< Style >, number) → StyleModule`\
-   Instances of this class bind the property names
-   from `spec` to CSS class names that assign the styles in the
-   corresponding property values.
+ * `new `**`StyleModule`**`(spec: Object< Style >, options: ?{generateClasses: ?boolean}) → StyleModule`\
+   Instances of this class bind the property names from `spec` to CSS
+   class names that assign the styles in the corresponding property
+   values, unless `generateClasses` is `false`, in which case the
+   property names in the spec are treated as plain CSS selectors.
 
    A style module can only be used in a given DOM root after it has
    been _mounted_ there with `StyleModule.mount`.

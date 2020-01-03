@@ -7,10 +7,11 @@ function sym(name, random) {
 const COUNT = sym("\u037c"), SET = sym("styleSet", 1), RULES = sym("rules", 1)
 const top = typeof global == "undefined" ? window : global
 
-// :: (Object<Style>, number) → StyleModule
-// Instances of this class bind the property names
-// from `spec` to CSS class names that assign the styles in the
-// corresponding property values.
+// :: (Object<Style>, ?{generateClasses: ?boolean}) → StyleModule
+// Instances of this class bind the property names from `spec` to CSS
+// class names that assign the styles in the corresponding property
+// values, unless `generateClasses` is `false`, in which case the
+// property names in the spec are treated as plain CSS selectors.
 //
 // A style module can only be used in a given DOM root after it has
 // been _mounted_ there with `StyleModule.mount`.
@@ -20,19 +21,22 @@ const top = typeof global == "undefined" ? window : global
 // CSS rules generated for a given DOM root is bounded by the amount
 // of style modules that were used. So to avoid leaking rules, don't
 // create these dynamically, but treat them as one-time allocations.
-export function StyleModule(spec) {
+export function StyleModule(spec, options) {
   this[RULES] = []
   top[COUNT] = top[COUNT] || 1
   for (let name in spec) {
     let style = spec[name], specificity = style.specificity || 0
-    let id = "\u037c" + (top[COUNT]++).toString(36)
-    let selector = "." + id, className = id
-    for (let i = 0; i < specificity; i++) {
-      let name = "\u037c_" + (i ? i.toString(36) : "")
-      selector += "." + name
-      className += " " + name
+    let id = "\u037c" + (top[COUNT]++).toString(36), selector = name
+    if ((options && options.generateClasses) !== false) {
+      let className = id
+      selector = "." + id
+      for (let i = 0; i < specificity; i++) {
+        let name = "\u037c_" + (i ? i.toString(36) : "")
+        selector += "." + name
+        className += " " + name
+      }
+      this[name] = className
     }
-    this[name] = className
     renderStyle(selector, spec[name], this[RULES])
   }
 }
