@@ -23,7 +23,6 @@ const top = typeof global == "undefined" ? window : global
 // create these dynamically, but treat them as one-time allocations.
 export function StyleModule(spec, options) {
   this[RULES] = []
-  top[COUNT] = top[COUNT] || 1
   for (let name in spec) {
     let style = spec[name], specificity = style.specificity || 0
     let id = StyleModule.newName(), selector = name
@@ -43,7 +42,11 @@ export function StyleModule(spec, options) {
 
 // :: () → string
 // Generate a new unique CSS class name.
-StyleModule.newName = () => "\u037c" + (top[COUNT]++).toString(36)
+StyleModule.newName = () => {
+  let id = top[COUNT] || 1
+  top[COUNT] = id + 1
+  return "\u037c" + id.toString(36)
+}
 
 StyleModule.prototype = Object.create(null)
 
