@@ -2,14 +2,20 @@
   "name": "style-mod",
   "version": "2.2.1",
   "description": "A minimal CSS module shim",
-  "main": "dist/style-mod.js",
+  "main": "dist/style-mod.cjs",
+  "type": "module",
+  "exports": {
+    "import": "./src/style-mod.js",
+    "require": "./dist/style-mod.cjs"
+  },
   "module": "src/style-mod.js",
+  "types": "src/style-mod.d.ts",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "npm run build && mocha test/test-*.js",
-    "build": "buble --no modules src/style-mod.js | sed -e 's/export function StyleModule/var StyleModule = exports.StyleModule = function/' > dist/style-mod.js; cp src/style-mod.d.ts dist/",
+    "build": "mkdir -p dist; buble --no modules src/style-mod.js | sed -e 's/export function StyleModule/var StyleModule = exports.StyleModule = function/' > dist/style-mod.cjs",
     "prepare": "npm run build && npm run build-readme",
     "build-readme": "builddocs --name style-mod --main src/README.md --format markdown src/*.js > README.md"
   },
