@@ -78,7 +78,7 @@ class StyleSet {
   }
 
   mount(modules) {
-    let sheet = this.styleTag.sheet, reset = !sheet
+    let sheet = this.styleTag.sheet
     let pos = 0 /* Current rule offset */, j = 0 /* Index into this.modules */
     for (let i = 0; i < modules.length; i++) {
       let mod = modules[i], index = this.modules.indexOf(mod)
@@ -89,7 +89,7 @@ class StyleSet {
       }
       if (index == -1) {
         this.modules.splice(j++, 0, mod)
-        if (!reset) for (let k = 0; k < mod[RULES].length; k++)
+        if (sheet) for (let k = 0; k < mod[RULES].length; k++)
           sheet.insertRule(mod[RULES][k], pos++)
       } else {
         while (j < index) pos += this.modules[j++][RULES].length
@@ -98,7 +98,7 @@ class StyleSet {
       }
     }
 
-    if (reset) {
+    if (!sheet) {
       let text = ""
       for (let i = 0; i < this.modules.length; i++)
         text += this.modules[i][RULES].join("\n") + "\n"
