@@ -67,18 +67,28 @@ StyleModule.mount = function(root, modules) {
   (root[SET] || new StyleSet(root)).mount(Array.isArray(modules) ? modules : [modules])
 }
 
+let adoptedSet = null
+
 class StyleSet {
   constructor(root) {
-    this.root = root
-    root[SET] = this
-    this.styleTag = (root.ownerDocument || root).createElement("style")
-    let target = root.head || root
-    target.insertBefore(this.styleTag, target.firstChild)
+    if (root.adoptedStyleSheets && typeof CSSStyleSheet != "undefined") {
+      if (adoptedSet) {
+        root.adoptedStyleSheets = [adoptedSet.sheet].concat(root.adoptedStyleSheets)
+        return root[SET] = adoptedSet
+      }
+      this.sheet = new CSSStyleSheet
+      root.adoptedStyleSheets = [this.sheet].concat(root.adoptedStyleSheets)
+      adoptedSet = this
+    } else {
+      this.styleTag = (root.ownerDocument || root).createElement("style")
+      let target = root.head || root
+      target.insertBefore(this.styleTag, target.firstChild)
+    }
     this.modules = []
   }
 
   mount(modules) {
-    let sheet = this.styleTag.sheet
+    let sheet = this.sheet
     let pos = 0 /* Current rule offset */, j = 0 /* Index into this.modules */
     for (let i = 0; i < modules.length; i++) {
       let mod = modules[i], index = this.modules.indexOf(mod)
