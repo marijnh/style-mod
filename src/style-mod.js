@@ -126,7 +126,7 @@ function renderStyle(selector, spec, output) {
       renderStyle(selector, spec[prop], local)
       output.push(prop + " {" + local.join(" ") + "}")
     } else if (/&/.test(prop)) {
-      renderStyle(prop.replace(/&/g, selector), spec[prop], output)
+      renderStyle(selector.split(/\s*,\s*/).map(sel => prop.replace(/&/g, sel)).join(", "), spec[prop], output)
     } else if (prop != "specificity") {
       if (typeof spec[prop] == "object") throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
       props.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
