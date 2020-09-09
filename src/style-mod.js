@@ -85,6 +85,7 @@ class StyleSet {
       target.insertBefore(this.styleTag, target.firstChild)
     }
     this.modules = []
+    root[SET] = this
   }
 
   mount(modules) {
