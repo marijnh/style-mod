@@ -118,6 +118,14 @@ class StyleSet {
   }
 }
 
+function extendSelector(template, sel) {
+  return sel.split(/\s*,\s*/).map(sel => {
+    let cut = sel.indexOf("/*|*/")
+    let prefix = cut < 0 ? "" : sel.slice(0, cut + 5)
+    return prefix + template.replace(/&/g, cut < 0 ? sel : sel.slice(cut + 5))
+  }).join(", ")
+}
+
 function renderStyle(selector, spec, output) {
   if (typeof spec != "object") throw new RangeError("Expected style object, got " + JSON.stringify(spec))
   let props = []
@@ -127,7 +135,7 @@ function renderStyle(selector, spec, output) {
       renderStyle(selector, spec[prop], local)
       output.push(prop + " {" + local.join(" ") + "}")
     } else if (/&/.test(prop)) {
-      renderStyle(selector.split(/\s*,\s*/).map(sel => prop.replace(/&/g, sel)).join(", "), spec[prop], output)
+      renderStyle(extendSelector(prop, selector), spec[prop], output)
     } else if (prop != "specificity") {
       if (typeof spec[prop] == "object") throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
       props.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
