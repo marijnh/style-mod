@@ -25,6 +25,10 @@ export function StyleModule(spec, options) {
   this[RULES] = []
   for (let name in spec) {
     let style = spec[name], specificity = style.specificity || 0
+    if (/^@/.test(name)) {
+      this[RULES].push(name + " {" + renderAt(style) + "}")
+      continue
+    }
     let id = StyleModule.newName(), selector = name
     if ((options && options.generateClasses) !== false) {
       let className = id
@@ -142,6 +146,17 @@ function renderStyle(selector, spec, output) {
     }
   }
   if (props.length) output.push(selector + " {" + props.join("; ") + "}")
+}
+
+function renderAt(spec) {
+  let result = ""
+  for (let prop in spec) {
+    if (result) result += /}$/.test(result) ? " " : "; "
+    let val = spec[prop]
+    if (typeof val == "object") result += prop + " {" + renderAt(val) + "}"
+    else result += prop + ": " + val
+  }
+  return result
 }
 
 // Style::Object<union<Style,string>>
