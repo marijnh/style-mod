@@ -1,6 +1,6 @@
 {
   "name": "style-mod",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "A minimal CSS module shim",
   "main": "dist/style-mod.cjs",
   "type": "module",
