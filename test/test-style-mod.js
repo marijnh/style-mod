@@ -1,43 +1,52 @@
-const {StyleModule} = require("..")
-const ist = require("ist")
+import {StyleModule} from "style-mod"
+import ist from "ist"
 
 describe("StyleModule", () => {
   it("renders objects to CSS text", () => {
     ist(rules(new StyleModule({main: {color: "red", border: "1px solid green"}})),
-        [".c1 {color: red; border: 1px solid green}"], eqRules)
+        ["main {color: red; border: 1px solid green;}"], eqRules)
   })
 
-  it("assigns different class to different objects", () => {
+  it("handles multiple rules", () => {
     ist(rules(new StyleModule({
       one: {color: "green"},
       two: {color: "blue"}
     })), [
-      ".c1 {color: green}",
-      ".c2 {color: blue}"
+      "one {color: green;}",
+      "two {color: blue;}"
     ], eqRules)
   })
 
-  it("supports pseudo-selectors", () => {
+  it("supports &-nesting", () => {
     ist(rules(new StyleModule({
       main: {
         color: "yellow",
         "&:hover": {fontWeight: "bold"}
       }
     })), [
-      ".c1:hover {font-weight: bold}",
-      ".c1 {color: yellow}"
+      "main:hover {font-weight: bold;}",
+      "main {color: yellow;}"
     ], eqRules)
   })
 
   it("supports media queries", () => {
     ist(rules(new StyleModule({
-      main: {
-        "@media screen and (min-width: 400px)": {
+      "@media screen and (min-width: 400px)": {
+        main: {
           fontFamily: '"URW Bookman"',
           MozBoxSizing: "border-box"
         }
       }
-    })), ["@media screen and (min-width: 400px) {.c1 {font-family: \"URW Bookman\"; -moz-box-sizing: border-box}}"], eqRules)
+    })), ["@media screen and (min-width: 400px) {main {font-family: \"URW Bookman\"; -moz-box-sizing: border-box;}}"], eqRules)
+  })
+
+  it("can render keyframes", () => {
+    ist(rules(new StyleModule({
+      "@keyframes foo": {
+        "0%": {color: "blue"},
+        "50%": {color: "red"}
+      }
+    })), ["@keyframes foo {0% {color: blue;} 50% {color: red;}}"], eqRules)
   })
 
   it("can render multiple instances of a property", () => {
@@ -46,37 +55,31 @@ describe("StyleModule", () => {
         color: "rgba(100, 100, 100, .5)",
         color_2: "grey"
       }
-    })), [".c1 {color: rgba(100, 100, 100, .5); color: grey}"], eqRules)
+    })), ["main {color: rgba(100, 100, 100, .5); color: grey;}"], eqRules)
   })
 
-  it("can add specificity", () => {
-    let mod = new StyleModule({
-      main: {
-        specificity: 1,
-        color: "yellow"
-      },
-      other: {
-        specificity: 2,
-        color: "blue"
+  it("can expand multiple selectors at once", () => {
+    ist(rules(new StyleModule({
+      "one, two": {
+        "&.x": {
+          color: "yellow"
+        }
       }
-    })
-    ist(rules(mod), [".c1.c_ {color: yellow}", ".c2.c_.c_1 {color: blue}"], eqRules)
-    ist(mod.main.split(" ").length, 2)
-    ist(mod.other.split(" ").length, 3)
+    })), ["one.x, two.x {color: yellow;}"], eqRules)
+  })
+
+  it("allows processing of selectors", () => {
+    ist(rules(new StyleModule({
+      "abc, cba": {color: "yellow"},
+      "@media stuff": {abc: {fontWeight: "bold"}}
+    }, {
+      process: x => x.replace(/a/g, "u")
+    })), ["ubc, cbu {color: yellow;}", "@media stuff {ubc {font-weight: bold;}}"], eqRules)
   })
 })
 
-function rules(module) {
-  for (let p in module) if (Array.isArray(module[p])) return module[p]
-  for (let p of Object.getOwnPropertySymbols(module)) if (Array.isArray(module[p])) return module[p]
-}
-
-function norm(rules) {
-  let names = [], re = /\.[c\u037c](\w+)/g, m
-  for (let rule of rules) while (m = re.exec(rule)) if (names.indexOf(m[1]) < 0) names.push(m[1])
-  return rules.map(rule => rule.replace(re, (_, id) => ".c" + (names.indexOf(id) + 1)))
-}
+function rules(module) { return module.rules }
 
 function eqRules(a, b) {
-  return JSON.stringify(norm(a)) == JSON.stringify(norm(b))
+  return JSON.stringify(a) == JSON.stringify(b)
 }

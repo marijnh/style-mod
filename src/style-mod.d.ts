@@ -1,11 +1,10 @@
-export type StyleModule<S = {}> = {[id in keyof S]: string}
-
-export const StyleModule: {
-  new <S extends {[name: string]: Style}>(spec: S, options?: {generateClasses?: boolean}): StyleModule<{[id in keyof S]: string}>
-  mount(root: Document | ShadowRoot | DocumentOrShadowRoot, module: StyleModule | ReadonlyArray<StyleModule>): void
-  newName(): string
+export class StyleModule {
+  constructor(spec: {[selector: string]: StyleSpec},
+              options?: {process(sel: string): string, extend(template: string, sel: string): string})
+  static mount(root: Document | ShadowRoot | DocumentOrShadowRoot, module: StyleModule | ReadonlyArray<StyleModule>): void
+  static newName(): string
 }
 
-export type Style = {
-  [propOrSelector: string]: string | number | Style
+export type StyleSpec = {
+  [propOrSelector: string]: string | number | StyleSpec
 }

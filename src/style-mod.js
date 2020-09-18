@@ -1,74 +1,79 @@
-function sym(name, random) {
-  return typeof Symbol == "undefined"
-    ? "__" + name + (random ? Math.floor(Math.random() * 1e8) : "")
-    : random ? Symbol(name) : Symbol.for(name)
-}
-
-const COUNT = sym("\u037c"), SET = sym("styleSet", 1), RULES = sym("rules", 1)
+const C = "\u037c"
+const COUNT = typeof Symbol == "undefined" ? "__" + C : Symbol.for(C)
+const SET = typeof Symbol == "undefined" ? "__styleSet" + Math.floor(Math.random() * 1e8) : Symbol("styleSet")
 const top = typeof global == "undefined" ? window : global
 
-// :: (Object<Style>, ?{generateClasses: ?boolean}) → StyleModule
-// Instances of this class bind the property names from `spec` to CSS
-// class names that assign the styles in the corresponding property
-// values, unless `generateClasses` is `false`, in which case the
-// property names in the spec are treated as plain CSS selectors.
-//
-// A style module can only be used in a given DOM root after it has
-// been _mounted_ there with `StyleModule.mount`.
+// Style modules encapsulate a set of CSS rules defined from
+// JavaScript. Their definitions are only available in a given DOM
+// root after it has been _mounted_ there with `StyleModule.mount`.
 //
 // Style modules should be created once and stored somewhere, as
 // opposed to re-creating them every time you need them. The amount of
 // CSS rules generated for a given DOM root is bounded by the amount
 // of style modules that were used. So to avoid leaking rules, don't
 // create these dynamically, but treat them as one-time allocations.
-export function StyleModule(spec, options) {
-  this[RULES] = []
-  for (let name in spec) {
-    let style = spec[name], specificity = style.specificity || 0
-    if (/^@/.test(name)) {
-      this[RULES].push(name + " {" + renderAt(style) + "}")
-      continue
+export class StyleModule {
+  // :: (Object<Style>, ?{process: (string) → string, extend: (string, string) → string})
+  // Create a style module from the given spec.
+  //
+  // When `process` is given, it is called on regular (non-`@`)
+  // selector properties to provide the actual selector. When `extend`
+  // is given, it is called when a property containing an `&` is
+  // found, and should somehow combine the `&`-template (its first
+  // argument) with the selector (its second argument) to produce an
+  // extended selector.
+  constructor(spec, options) {
+    this.rules = []
+    let {process, extend} = options || {}
+
+    function processSelector(selector) {
+      if (/^@/.test(selector)) return [selector]
+      let selectors = selector.split(",")
+      return process ? selectors.map(process) : selectors
     }
-    let id = StyleModule.newName(), selector = name
-    if ((options && options.generateClasses) !== false) {
-      let className = id
-      selector = "." + id
-      for (let i = 0; i < specificity; i++) {
-        let name = "\u037c_" + (i ? i.toString(36) : "")
-        selector += "." + name
-        className += " " + name
+
+    function render(selectors, spec, target) {
+      let local = [], isAt = /^@/.test(selectors[0])
+      for (let prop in spec) {
+        if (/&/.test(prop)) {
+          render(selectors.map(s => extend ? extend(prop, s) : prop.replace(/&/, s)), spec[prop], target)
+        } else if (typeof spec[prop] == "object") {
+          if (!isAt) throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
+          render(processSelector(prop), spec[prop], local)
+        } else {
+          local.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop] + ";")
+        }
       }
-      this[name] = className
+      if (local.length) target.push(selectors.join(",") + " {" + local.join(" ") + "}")
     }
-    renderStyle(selector, spec[name], this[RULES])
+
+    for (let prop in spec) render(processSelector(prop), spec[prop], this.rules)
   }
-}
 
-// :: () → string
-// Generate a new unique CSS class name.
-StyleModule.newName = () => {
-  let id = top[COUNT] || 1
-  top[COUNT] = id + 1
-  return "\u037c" + id.toString(36)
-}
+  // :: () → string
+  // Generate a new unique CSS class name.
+  static newName() {
+    let id = top[COUNT] || 1
+    top[COUNT] = id + 1
+    return C + id.toString(36)
+  }
 
-StyleModule.prototype = Object.create(null)
-
-// :: (union<Document, ShadowRoot>, union<[StyleModule], StyleModule>)
-//
-// Mount the given set of modules in the given DOM root, which ensures
-// that the CSS rules defined by the module are available in that
-// context.
-//
-// Rules are only added to the document once per root.
-//
-// Rule order will follow the order of the modules, so that rules from
-// modules later in the array take precedence of those from earlier
-// modules. If you call this function multiple times for the same root
-// in a way that changes the order of already mounted modules, the old
-// order will be changed.
-StyleModule.mount = function(root, modules) {
-  (root[SET] || new StyleSet(root)).mount(Array.isArray(modules) ? modules : [modules])
+  // :: (union<Document, ShadowRoot>, union<[StyleModule], StyleModule>)
+  //
+  // Mount the given set of modules in the given DOM root, which ensures
+  // that the CSS rules defined by the module are available in that
+  // context.
+  //
+  // Rules are only added to the document once per root.
+  //
+  // Rule order will follow the order of the modules, so that rules from
+  // modules later in the array take precedence of those from earlier
+  // modules. If you call this function multiple times for the same root
+  // in a way that changes the order of already mounted modules, the old
+  // order will be changed.
+  static mount(root, modules) {
+    (root[SET] || new StyleSet(root)).mount(Array.isArray(modules) ? modules : [modules])
+  }
 }
 
 let adoptedSet = null
@@ -104,11 +109,11 @@ class StyleSet {
       }
       if (index == -1) {
         this.modules.splice(j++, 0, mod)
-        if (sheet) for (let k = 0; k < mod[RULES].length; k++)
-          sheet.insertRule(mod[RULES][k], pos++)
+        if (sheet) for (let k = 0; k < mod.rules.length; k++)
+          sheet.insertRule(mod.rules[k], pos++)
       } else {
-        while (j < index) pos += this.modules[j++][RULES].length
-        pos += mod[RULES].length
+        while (j < index) pos += this.modules[j++].rules.length
+        pos += mod.rules.length
         j++
       }
     }
@@ -116,47 +121,10 @@ class StyleSet {
     if (!sheet) {
       let text = ""
       for (let i = 0; i < this.modules.length; i++)
-        text += this.modules[i][RULES].join("\n") + "\n"
+        text += this.modules[i].rules.join("\n") + "\n"
       this.styleTag.textContent = text
     }
   }
-}
-
-function extendSelector(template, sel) {
-  return sel.split(/\s*,\s*/).map(sel => {
-    let cut = sel.indexOf("/*|*/")
-    let prefix = cut < 0 ? "" : sel.slice(0, cut + 5)
-    return prefix + template.replace(/&/g, cut < 0 ? sel : sel.slice(cut + 5))
-  }).join(", ")
-}
-
-function renderStyle(selector, spec, output) {
-  if (typeof spec != "object") throw new RangeError("Expected style object, got " + JSON.stringify(spec))
-  let props = []
-  for (let prop in spec) {
-    if (/^@/.test(prop)) {
-      let local = []
-      renderStyle(selector, spec[prop], local)
-      output.push(prop + " {" + local.join(" ") + "}")
-    } else if (/&/.test(prop)) {
-      renderStyle(extendSelector(prop, selector), spec[prop], output)
-    } else if (prop != "specificity") {
-      if (typeof spec[prop] == "object") throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
-      props.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop])
-    }
-  }
-  if (props.length) output.push(selector + " {" + props.join("; ") + "}")
-}
-
-function renderAt(spec) {
-  let result = ""
-  for (let prop in spec) {
-    if (result) result += /}$/.test(result) ? " " : "; "
-    let val = spec[prop]
-    if (typeof val == "object") result += prop + " {" + renderAt(val) + "}"
-    else result += prop + ": " + val
-  }
-  return result
 }
 
 // Style::Object<union<Style,string>>
@@ -171,13 +139,6 @@ function renderAt(spec) {
 // after it will be removed from the output, which can be useful when
 // providing a property multiple times, for browser compatibility
 // reasons.
-//
-// A property called `specificity` has a special meaning: if it holds
-// a number _N_, greater than 0, the selector for the class will have
-// _N_ extra dummy classes added, and those dummy classes will also be
-// present in the class name string created for the style. This allows
-// you to create rules that take precedence over other rules, even
-// when they are defined earlier.
 //
 // A property in a style object can also be a sub-selector, which
 // extends the current context to add a pseudo-selector or a child
