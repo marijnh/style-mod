@@ -33,18 +33,19 @@ export class StyleModule {
     }
 
     function render(selectors, spec, target) {
-      let local = [], isAt = /^@/.test(selectors[0])
+      let local = [], isAt = /^@(\w+)\b/.exec(selectors[0])
+      if (isAt && spec == null) return target.push(selectors[0] + ";")
       for (let prop in spec) {
         if (/&/.test(prop)) {
           render(selectors.map(s => extend ? extend(prop, s) : prop.replace(/&/, s)), spec[prop], target)
         } else if (typeof spec[prop] == "object") {
           if (!isAt) throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
-          render(processSelector(prop), spec[prop], local)
+          render(isAt[1] == "keyframes" ? [prop] : processSelector(prop), spec[prop], local)
         } else {
           local.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop] + ";")
         }
       }
-      if (local.length) target.push(selectors.join(",") + " {" + local.join(" ") + "}")
+      if (local.length || isAt && isAt[1] == "keyframes") target.push(selectors.join(",") + " {" + local.join(" ") + "}")
     }
 
     for (let prop in spec) render(processSelector(prop), spec[prop], this.rules)
