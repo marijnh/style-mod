@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "npm run build && mocha test/test-*.js",
-    "build": "mkdir -p dist; buble --no modules src/style-mod.js | sed -e 's/export function StyleModule/var StyleModule = exports.StyleModule = function/' > dist/style-mod.cjs",
+    "build": "mkdir -p dist; buble --no modules src/style-mod.js | sed -e 's/export var StyleModule/var StyleModule = exports.StyleModule/' > dist/style-mod.cjs",
     "prepare": "npm run build && npm run build-readme",
     "build-readme": "builddocs --name style-mod --main src/README.md --format markdown src/*.js > README.md"
   },
