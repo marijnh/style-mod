@@ -29,7 +29,43 @@ This code is open source, released under an MIT license.
     
 ## Documentation
 
- * **`StyleModule`**
+### class StyleModule
+
+Style modules encapsulate a set of CSS rules defined from
+JavaScript. Their definitions are only available in a given DOM
+root after it has been _mounted_ there with `StyleModule.mount`.
+
+Style modules should be created once and stored somewhere, as
+opposed to re-creating them every time you need them. The amount of
+CSS rules generated for a given DOM root is bounded by the amount
+of style modules that were used. So to avoid leaking rules, don't
+create these dynamically, but treat them as one-time allocations.
+
+ * `new `**`StyleModule`**`(spec: Object< Style >, options: ?{process: fn(string) → string, extend: fn(string, string) → string})`\
+   Create a style module from the given spec.
+
+   When `process` is given, it is called on regular (non-`@`)
+   selector properties to provide the actual selector. When `extend`
+   is given, it is called when a property containing an `&` is
+   found, and should somehow combine the `&`-template (its first
+   argument) with the selector (its second argument) to produce an
+   extended selector.
+
+ * `static `**`newName`**`() → string`\
+   Generate a new unique CSS class name.
+
+ * `static `**`mount`**`(root: Document | ShadowRoot, modules: [StyleModule] | StyleModule)`\
+   Mount the given set of modules in the given DOM root, which ensures
+   that the CSS rules defined by the module are available in that
+   context.
+
+   Rules are only added to the document once per root.
+
+   Rule order will follow the order of the modules, so that rules from
+   modules later in the array take precedence of those from earlier
+   modules. If you call this function multiple times for the same root
+   in a way that changes the order of already mounted modules, the old
+   order will be changed.
 
 
 Where the `Style` type is defined as:

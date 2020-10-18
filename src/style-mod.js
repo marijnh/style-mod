@@ -3,7 +3,7 @@ const COUNT = typeof Symbol == "undefined" ? "__" + C : Symbol.for(C)
 const SET = typeof Symbol == "undefined" ? "__styleSet" + Math.floor(Math.random() * 1e8) : Symbol("styleSet")
 const top = typeof global == "undefined" ? window : global
 
-// Style modules encapsulate a set of CSS rules defined from
+// :: - Style modules encapsulate a set of CSS rules defined from
 // JavaScript. Their definitions are only available in a given DOM
 // root after it has been _mounted_ there with `StyleModule.mount`.
 //
