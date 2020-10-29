@@ -36,13 +36,14 @@ export class StyleModule {
       let local = [], isAt = /^@(\w+)\b/.exec(selectors[0])
       if (isAt && spec == null) return target.push(selectors[0] + ";")
       for (let prop in spec) {
+        let value = spec[prop]
         if (/&/.test(prop)) {
-          render(selectors.map(s => extend ? extend(prop, s) : prop.replace(/&/, s)), spec[prop], target)
-        } else if (typeof spec[prop] == "object") {
+          render(selectors.map(s => extend ? extend(prop, s) : prop.replace(/&/, s)), value, target)
+        } else if (value && typeof value == "object") {
           if (!isAt) throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
-          render(isAt[1] == "keyframes" ? [prop] : processSelector(prop), spec[prop], local)
-        } else {
-          local.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + spec[prop] + ";")
+          render(isAt[1] == "keyframes" ? [prop] : processSelector(prop), value, local)
+        } else if (value != null) {
+          local.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + value + ";")
         }
       }
       if (local.length || isAt && isAt[1] == "keyframes") target.push(selectors.join(",") + " {" + local.join(" ") + "}")
