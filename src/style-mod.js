@@ -53,6 +53,10 @@ export class StyleModule {
   }
 
   // :: () → string
+  // Returns a string containing the module's CSS rules.
+  getRules() { return this.rules.join("\n") }
+
+  // :: () → string
   // Generate a new unique CSS class name.
   static newName() {
     let id = top[COUNT] || 1
@@ -123,7 +127,7 @@ class StyleSet {
     if (!sheet) {
       let text = ""
       for (let i = 0; i < this.modules.length; i++)
-        text += this.modules[i].rules.join("\n") + "\n"
+        text += this.modules[i].getRules() + "\n"
       this.styleTag.textContent = text
     }
   }

@@ -51,6 +51,9 @@ create these dynamically, but treat them as one-time allocations.
    argument) with the selector (its second argument) to produce an
    extended selector.
 
+ * **`getRules`**`() → string`\
+   Returns a string containing the module's CSS rules.
+
  * `static `**`newName`**`() → string`\
    Generate a new unique CSS class name.
 
