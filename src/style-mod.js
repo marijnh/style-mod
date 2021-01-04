@@ -86,7 +86,7 @@ let adoptedSet = null
 
 class StyleSet {
   constructor(root) {
-    if (root.adoptedStyleSheets && typeof CSSStyleSheet != "undefined") {
+    if (!root.head && root.adoptedStyleSheets && typeof CSSStyleSheet != "undefined") {
       if (adoptedSet) {
         root.adoptedStyleSheets = [adoptedSet.sheet].concat(root.adoptedStyleSheets)
         return root[SET] = adoptedSet
