@@ -29,6 +29,16 @@ describe("StyleModule", () => {
     ], eqRules)
   })
 
+  it("can replace multiple & markers", () => {
+    ist(rules(new StyleModule({
+      main: {
+        "p &, div &": {color: "blue"}
+      }
+    })), [
+      "p main, div main {color: blue;}"
+    ], eqRules)
+  })
+
   it("supports media queries", () => {
     ist(rules(new StyleModule({
       "@media screen and (min-width: 400px)": {

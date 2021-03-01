@@ -38,7 +38,7 @@ export class StyleModule {
       for (let prop in spec) {
         let value = spec[prop]
         if (/&/.test(prop)) {
-          render(selectors.map(s => extend ? extend(prop, s) : prop.replace(/&/, s)), value, target)
+          render(selectors.map(s => extend ? extend(prop, s) : prop.replace(/&/g, s)), value, target)
         } else if (value && typeof value == "object") {
           if (!isAt) throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
           render(isAt[1] == "keyframes" ? [prop] : processSelector(prop), value, local)
