@@ -13,43 +13,41 @@ const top = typeof globalThis != "undefined" ? globalThis : typeof window != "un
 // of style modules that were used. So to avoid leaking rules, don't
 // create these dynamically, but treat them as one-time allocations.
 export class StyleModule {
-  // :: (Object<Style>, ?{process: (string) → string, extend: (string, string) → string})
+  // :: (Object<Style>, ?{finish: ?(string) → string})
   // Create a style module from the given spec.
   //
-  // When `process` is given, it is called on regular (non-`@`)
-  // selector properties to provide the actual selector. When `extend`
-  // is given, it is called when a property containing an `&` is
-  // found, and should somehow combine the `&`-template (its first
-  // argument) with the selector (its second argument) to produce an
-  // extended selector.
+  // When `finish` is given, it is called on regular (non-`@`)
+  // selectors (after `&` expansion) to compute the final selector.
   constructor(spec, options) {
     this.rules = []
-    let {process, extend} = options || {}
+    let {finish} = options || {}
 
-    function processSelector(selector) {
-      if (/^@/.test(selector)) return [selector]
-      let selectors = selector.split(",")
-      return process ? selectors.map(process) : selectors
+    function splitSelector(selector) {
+      return /^@/.test(selector) ? [selector] : selector.split(/,\s*/)
     }
 
-    function render(selectors, spec, target) {
-      let local = [], isAt = /^@(\w+)\b/.exec(selectors[0])
+    function render(selectors, spec, target, isKeyframes) {
+      let local = [], isAt = /^@(\w+)\b/.exec(selectors[0]), keyframes = isAt && isAt[1] == "keyframes"
       if (isAt && spec == null) return target.push(selectors[0] + ";")
       for (let prop in spec) {
         let value = spec[prop]
         if (/&/.test(prop)) {
-          render(selectors.map(s => extend ? extend(prop, s) : prop.replace(/&/g, s)), value, target)
+          render(prop.split(/,\s*/).map(part => selectors.map(sel => part.replace(/&/, sel))).reduce((a, b) => a.concat(b)),
+                 value, target)
         } else if (value && typeof value == "object") {
           if (!isAt) throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
-          render(isAt[1] == "keyframes" ? [prop] : processSelector(prop), value, local)
+          render(splitSelector(prop), value, local, keyframes)
         } else if (value != null) {
           local.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + value + ";")
         }
       }
-      if (local.length || isAt && isAt[1] == "keyframes") target.push(selectors.join(",") + " {" + local.join(" ") + "}")
+      if (local.length || keyframes) {
+        target.push((finish && !isAt && !isKeyframes ? selectors.map(finish) : selectors).join(", ") +
+                    " {" + local.join(" ") + "}")
+      }
     }
 
-    for (let prop in spec) render(processSelector(prop), spec[prop], this.rules)
+    for (let prop in spec) render(splitSelector(prop), spec[prop], this.rules)
   }
 
   // :: () → string

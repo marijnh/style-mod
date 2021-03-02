@@ -59,6 +59,15 @@ describe("StyleModule", () => {
     })), ["@keyframes foo {0% {color: blue;} 50% {color: red;}}"], eqRules)
   })
 
+  it("doesn't mangle keyframe names", () => {
+    ist(rules(new StyleModule({
+      "@keyframes foo": {
+        "0%": {color: "blue"},
+        "50%": {color: "red"}
+      }
+    }, {finish: s => ".foo " + s})), ["@keyframes foo {0% {color: blue;} 50% {color: red;}}"], eqRules)
+  })
+
   it("can render multiple instances of a property", () => {
     ist(rules(new StyleModule({
       main: {
@@ -83,7 +92,7 @@ describe("StyleModule", () => {
       "abc, cba": {color: "yellow"},
       "@media stuff": {abc: {fontWeight: "bold"}}
     }, {
-      process: x => x.replace(/a/g, "u")
+      finish: x => x.replace(/a/g, "u")
     })), ["ubc, cbu {color: yellow;}", "@media stuff {ubc {font-weight: bold;}}"], eqRules)
   })
 })

@@ -41,15 +41,11 @@ CSS rules generated for a given DOM root is bounded by the amount
 of style modules that were used. So to avoid leaking rules, don't
 create these dynamically, but treat them as one-time allocations.
 
- * `new `**`StyleModule`**`(spec: Object< Style >, options: ?{process: fn(string) → string, extend: fn(string, string) → string})`\
+ * `new `**`StyleModule`**`(spec: Object< Style >, options: ?{finish: ?fn(string) → string})`\
    Create a style module from the given spec.
 
-   When `process` is given, it is called on regular (non-`@`)
-   selector properties to provide the actual selector. When `extend`
-   is given, it is called when a property containing an `&` is
-   found, and should somehow combine the `&`-template (its first
-   argument) with the selector (its second argument) to produce an
-   extended selector.
+   When `finish` is given, it is called on regular (non-`@`)
+   selectors (after `&` expansion) to compute the final selector.
 
  * **`getRules`**`() → string`\
    Returns a string containing the module's CSS rules.
