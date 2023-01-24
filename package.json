@@ -24,7 +24,7 @@
     "module",
     "styling"
   ],
-  "author": "Marijn Haverbeke <marijnh@gmail.com>",
+  "author": "Marijn Haverbeke <marijn@haverbeke.berlin>",
   "license": "MIT",
   "devDependencies": {
     "buble": "^0.19.6",
