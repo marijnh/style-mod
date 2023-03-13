@@ -86,11 +86,11 @@ class StyleSet {
   constructor(root) {
     if (!root.head && root.adoptedStyleSheets && typeof CSSStyleSheet != "undefined") {
       if (adoptedSet) {
-        root.adoptedStyleSheets = [adoptedSet.sheet].concat(root.adoptedStyleSheets)
+        root.adoptedStyleSheets = [adoptedSet.sheet, ...root.adoptedStyleSheets]
         return root[SET] = adoptedSet
       }
       this.sheet = new CSSStyleSheet
-      root.adoptedStyleSheets = [this.sheet].concat(root.adoptedStyleSheets)
+      root.adoptedStyleSheets = [this.sheet, ...root.adoptedStyleSheets]
       adoptedSet = this
     } else {
       this.styleTag = (root.ownerDocument || root).createElement("style")
