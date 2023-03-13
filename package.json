@@ -1,6 +1,6 @@
 {
   "name": "style-mod",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "A minimal CSS module shim",
   "main": "dist/style-mod.cjs",
   "type": "module",
@@ -27,7 +27,7 @@
   "author": "Marijn Haverbeke <marijn@haverbeke.berlin>",
   "license": "MIT",
   "devDependencies": {
-    "buble": "^0.19.6",
+    "buble": "^0.20.0",
     "builddocs": "^0.3.2",
     "ist": "^1.1.1",
     "mocha": "^7.2.0"
