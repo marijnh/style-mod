@@ -24,6 +24,10 @@
     "module",
     "styling"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marijnh/style-mod.git"
+  },
   "author": "Marijn Haverbeke <marijn@haverbeke.berlin>",
   "license": "MIT",
   "devDependencies": {
