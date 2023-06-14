@@ -75,15 +75,15 @@ export class StyleModule {
   // modules. If you call this function multiple times for the same root
   // in a way that changes the order of already mounted modules, the old
   // order will be changed.
-  static mount(root, modules) {
-    (root[SET] || new StyleSet(root)).mount(Array.isArray(modules) ? modules : [modules])
+  static mount(root, modules, styleElementAttributes) {
+    (root[SET] || new StyleSet(root, styleElementAttributes)).mount(Array.isArray(modules) ? modules : [modules])
   }
 }
 
 let adoptedSet = new Map //<Document, StyleSet>
 
 class StyleSet {
-  constructor(root) {
+  constructor(root, attributes) {
     let doc = root.ownerDocument || root, win = doc.defaultView
     if (!root.head && root.adoptedStyleSheets && win.CSSStyleSheet) {
       let adopted = adoptedSet.get(doc)
@@ -96,6 +96,9 @@ class StyleSet {
       adoptedSet.set(doc, this)
     } else {
       this.styleTag = doc.createElement("style")
+      if (attributes && typeof attributes === 'object') {
+        Object.entries(attributes).forEach(([key, val]) => this.styleTag.setAttribute(key, val))
+      }
       let target = root.head || root
       target.insertBefore(this.styleTag, target.firstChild)
     }
