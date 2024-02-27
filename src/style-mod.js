@@ -90,21 +90,16 @@ let adoptedSet = new Map //<Document, StyleSet>
 
 class StyleSet {
   constructor(root, nonce) {
+    this.root = root
     let doc = root.ownerDocument || root, win = doc.defaultView
     if (!root.head && root.adoptedStyleSheets && win.CSSStyleSheet) {
       let adopted = adoptedSet.get(doc)
-      if (adopted) {
-        root.adoptedStyleSheets = [adopted.sheet, ...root.adoptedStyleSheets]
-        return root[SET] = adopted
-      }
+      if (adopted) return root[SET] = adopted
       this.sheet = new win.CSSStyleSheet
-      root.adoptedStyleSheets = [this.sheet, ...root.adoptedStyleSheets]
       adoptedSet.set(doc, this)
     } else {
       this.styleTag = doc.createElement("style")
       if (nonce) this.styleTag.setAttribute("nonce", nonce)
-      let target = root.head || root
-      target.insertBefore(this.styleTag, target.firstChild)
     }
     this.modules = []
     root[SET] = this
@@ -131,11 +126,17 @@ class StyleSet {
       }
     }
 
-    if (!sheet) {
+    if (sheet) {
+      if (this.root.adoptedStyleSheets.indexOf(this.sheet) < 0)
+        this.root.adoptedStyleSheets = [this.sheet, ...this.root.adoptedStyleSheets]
+    } else {
       let text = ""
       for (let i = 0; i < this.modules.length; i++)
         text += this.modules[i].getRules() + "\n"
       this.styleTag.textContent = text
+      let target = this.root.head || this.root
+      if (this.styleTag.parentNode != target)
+        target.insertBefore(this.styleTag, target.firstChild)
     }
   }
 
