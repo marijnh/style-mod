@@ -82,7 +82,7 @@ export class StyleModule {
     let set = root[SET], nonce = options && options.nonce
     if (!set) set = new StyleSet(root, nonce)
     else if (nonce) set.setNonce(nonce)
-    set.mount(Array.isArray(modules) ? modules : [modules])
+    set.mount(Array.isArray(modules) ? modules : [modules], root)
   }
 }
 
@@ -90,7 +90,6 @@ let adoptedSet = new Map //<Document, StyleSet>
 
 class StyleSet {
   constructor(root, nonce) {
-    this.root = root
     let doc = root.ownerDocument || root, win = doc.defaultView
     if (!root.head && root.adoptedStyleSheets && win.CSSStyleSheet) {
       let adopted = adoptedSet.get(doc)
@@ -105,7 +104,7 @@ class StyleSet {
     root[SET] = this
   }
 
-  mount(modules) {
+  mount(modules, root) {
     let sheet = this.sheet
     let pos = 0 /* Current rule offset */, j = 0 /* Index into this.modules */
     for (let i = 0; i < modules.length; i++) {
@@ -127,14 +126,14 @@ class StyleSet {
     }
 
     if (sheet) {
-      if (this.root.adoptedStyleSheets.indexOf(this.sheet) < 0)
-        this.root.adoptedStyleSheets = [this.sheet, ...this.root.adoptedStyleSheets]
+      if (root.adoptedStyleSheets.indexOf(this.sheet) < 0)
+        root.adoptedStyleSheets = [this.sheet, ...root.adoptedStyleSheets]
     } else {
       let text = ""
       for (let i = 0; i < this.modules.length; i++)
         text += this.modules[i].getRules() + "\n"
       this.styleTag.textContent = text
-      let target = this.root.head || this.root
+      let target = root.head || root
       if (this.styleTag.parentNode != target)
         target.insertBefore(this.styleTag, target.firstChild)
     }
