@@ -119,7 +119,10 @@ class StyleSet {
         if (sheet) for (let k = 0; k < mod.rules.length; k++)
           sheet.insertRule(mod.rules[k], pos++)
       } else {
-        while (j < index) pos += this.modules[j++].rules.length
+        while (j < index) {
+          let rules = this.modules[j++].rules;
+          if (rules) pos += rules.length;
+        }
         pos += mod.rules.length
         j++
       }
