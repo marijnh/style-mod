@@ -1,7 +1,7 @@
 const C = "\u037c"
 const COUNT = typeof Symbol == "undefined" ? "__" + C : Symbol.for(C)
 const SET = typeof Symbol == "undefined" ? "__styleSet" + Math.floor(Math.random() * 1e8) : Symbol("styleSet")
-const top = typeof globalThis != "undefined" ? globalThis : typeof window != "undefined" ? window : {}
+const top_ = typeof globalThis != "undefined" ? globalThis : typeof window != "undefined" ? window : {}
 
 // :: - Style modules encapsulate a set of CSS rules defined from
 // JavaScript. Their definitions are only available in a given DOM
@@ -57,8 +57,8 @@ export class StyleModule {
   // :: () → string
   // Generate a new unique CSS class name.
   static newName() {
-    let id = top[COUNT] || 1
-    top[COUNT] = id + 1
+    let id = top_[COUNT] || 1
+    top_[COUNT] = id + 1
     return C + id.toString(36)
   }
 
