@@ -1,3 +1,5 @@
+**This repository has been moved to https://code.haverbeke.berlin/marijn/style-mod**
+
 <!-- To edit this file, edit /src/README.md, not /README.md -->
 
 # style-mod
